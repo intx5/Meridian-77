@@ -1,0 +1,55 @@
+{
+  "region": {
+    "name": "Jezero Delta Front",
+    "bounds": [
+      77.29436321794068,
+      18.39402047680302,
+      77.46306926652184,
+      18.562726525384175
+    ],
+    "projectedBoundsM": [
+      4581600,
+      1090300,
+      4591600,
+      1100300
+    ],
+    "coordinateSystem": "Mars planetocentric latitude, east longitude; equirectangular sphere 3396190 m"
+  },
+  "grid": {
+    "width": 256,
+    "height": 256,
+    "rowOrder": "north first",
+    "resampling": "nearest neighbour on native cells"
+  },
+  "thermal": {
+    "input": "THEMIS_Jezero_Corridor_Thermal_Inertia_100m.tif",
+    "inputCrs": "Mars equirectangular sphere 3396190 m, standard parallel 0, planetocentric east longitude",
+    "transform": "gdalwarp bilinear to the region equirectangular grid; alpha-masked outside source coverage and feathered at the corridor edge",
+    "nativeResolutionM": 100,
+    "coverage": "92.6% of region (THEMIS corridor edge outside source extent)",
+    "units": "J m^-2 K^-1 s^-1/2",
+    "caution": "Apparent thermal inertia is thermophysical, not a measured temperature or traversability rating.",
+    "displayResolutionM": 19.53125
+  },
+  "mineralogy": {
+    "input": "CRISM HRL000040FF_07_IF183J_MTR3 (489 bands, 36 m/px)",
+    "bands": {
+      "2200.0": {
+        "band": 254,
+        "wavelengthNm": 2198.77
+      },
+      "2300.0": {
+        "band": 269,
+        "wavelengthNm": 2297.95
+      },
+      "2400.0": {
+        "band": 284,
+        "wavelengthNm": 2397.2
+      }
+    },
+    "index": "1 - R(2.298) / linear continuum R(2.199)-R(2.397) from CRISM MTRDR L2 radiance factor",
+    "threshold": 0.01,
+    "coverage": "100.0% of region",
+    "caution": "Positive 2.30 micron absorption is a candidate phyllosilicate indicator; it is not a confirmed mineral identification or abundance. Verify with targeted spectral modelling."
+  }
+}

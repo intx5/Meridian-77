@@ -1,0 +1,100 @@
+{
+  "region": {
+    "name": "Jezero Delta Front",
+    "bounds": [77.29436321794068, 18.39402047680302, 77.46306926652184, 18.562726525384175],
+    "projectedBoundsM": [4581600, 1090300, 4591600, 1100300],
+    "coordinateSystem": "Mars planetocentric latitude, east longitude; equirectangular sphere 3396190 m"
+  },
+  "layers": [
+    {
+      "id": "optical",
+      "label": "HiRISE / CTX Optical",
+      "imageUrl": "/data/jezero/optical.webp",
+      "sourceUrl": "https://astrogeology.usgs.gov/search/map/Mars/Mars2020/JEZ_hirise_soc_006_orthoMosaic_25cm_Eqc_latTs0_lon0_first",
+      "resolution": "2 projected m/px",
+      "legend": [{ "label": "Surface albedo", "color": "#c9a27e" }],
+      "note": "Near-nadir imaging mosaic of the Jezero delta front."
+    },
+    {
+      "id": "topography",
+      "label": "Topography",
+      "imageUrl": "/data/jezero/hillshade.webp",
+      "sourceUrl": "https://murray-lab.caltech.edu/Mars2020/index.html",
+      "resolution": "9.77 projected m/px",
+      "legend": [
+        { "label": "< 15° slope", "color": "#52a575" },
+        { "label": "15° to < 25°", "color": "#e8b449" },
+        { "label": "≥ 25° no-go", "color": "#da5741" }
+      ],
+      "note": "Hillshade from the regional DEM; slope overlay uses the same elevation source.",
+      "overlay": {
+        "id": "slope",
+        "label": "Slope overlay",
+        "imageUrl": "/data/jezero/slope.webp",
+        "defaultOpacity": 0,
+        "legend": [
+          { "label": "< 15°", "color": "#52a575" },
+          { "label": "15° to < 25°", "color": "#e8b449" },
+          { "label": "≥ 25°", "color": "#da5741" }
+        ]
+      }
+    },
+    {
+      "id": "geology",
+      "label": "USGS geology",
+      "imageUrl": "/data/jezero/geology.webp",
+      "sourceUrl": "https://www.usgs.gov/maps/geologic-map-jezero-crater-and-nili-planum-region-mars",
+      "resolution": "1:75,000",
+      "legend": [
+        { "label": "Jezero fan 2 (NHjf2)", "color": "#397fba" },
+        { "label": "Jezero floor (Njf)", "color": "#ecadc4" },
+        { "label": "Nili Planum 1 (Nnp1)", "color": "#d2bd86" },
+        { "label": "Eolian bedform (Aeb)", "color": "#ecdba0" }
+      ],
+      "note": "USGS Jezero geologic map units; the delta-front target is mapped as Jezero fan 2 (NHjf2)."
+    },
+    {
+      "id": "thermal",
+      "label": "Thermal inertia",
+      "imageUrl": "/data/jezero/thermal.webp",
+      "sourceUrl": "https://murray-lab.caltech.edu/Mars2020/data/ThemisTI/THEMIS_TI_Quantitative.zip",
+      "resolution": "100 m source, 19.5 m aligned display grid",
+      "units": "J m⁻² K⁻¹ s⁻¹/²",
+      "legend": [
+        { "label": "< 200 SI", "color": "#102a43" },
+        { "label": "200–300 SI", "color": "#2a9d8f" },
+        { "label": "300–350 SI", "color": "#e9c46a" },
+        { "label": "> 350 SI", "color": "#ff6b3d" }
+      ],
+      "note": "THEMIS apparent thermal inertia, warped to the map's equirectangular region grid and alpha-masked outside source coverage. High values are flagged by the planning assumptions.",
+      "coveragePercent": 92.6,
+      "percentile80": 347.1
+    },
+    {
+      "id": "mineralogy",
+      "label": "Mineralogy · CRISM",
+      "imageUrl": "/data/jezero/mineralogy.webp",
+      "sourceUrl": "https://pds-geosciences.wustl.edu/mro/mro-m-crism-5-rdr-mptargeted-v1/mrocr_2101/data/hrl000040ff/hrl000040ff_07_if183j_mtr3.img",
+      "resolution": "36 m source, 39 m display grid",
+      "units": "continuum-removed band depth",
+      "legend": [
+        { "label": "0.010–0.020 candidate", "color": "#57c7ff" },
+        { "label": "> 0.020 stronger candidate", "color": "#ff6b3d" }
+      ],
+      "note": "CRISM 2.30 µm absorption depth: a possible phyllosilicate indicator, not a confirmed mineral abundance. Pixels below 0.010 are transparent.",
+      "thresholdPositive": 0.01,
+      "coveragePercent": 100
+    }
+  ],
+  "elevation": {
+    "url": "/data/jezero/dem.json",
+    "sourceUrl": "https://murray-lab.caltech.edu/Mars2020/index.html",
+    "coveragePercent": 92.2,
+    "verticalReference": "Mars areoid (GMM3 degree and order 50)"
+  },
+  "pov": {
+    "imageUrl": "/data/jezero/pov/delta-panorama.webp",
+    "imageCredit": "NASA/JPL-Caltech/ASU/MSSS",
+    "sourceUrl": "https://science.nasa.gov/photojournal/detailed-panorama-of-mars-jezero-crater-delta/"
+  }
+}

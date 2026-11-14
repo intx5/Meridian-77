@@ -1,0 +1,104 @@
+[
+  {
+    "id": "wp-01",
+    "name": "Octavia E. Butler Landing",
+    "lon": 77.450947,
+    "lat": 18.444543,
+    "kind": "start",
+    "sol": 14,
+    "imageUrl": "/data/jezero/pov/octavia-sol14-hazcam.webp",
+    "imageCredit": "NASA/JPL-Caltech",
+    "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00014/ids/edr/browse/fcam/FLF_0014_0668191805_035ECM_N0030110FHAZ02002_01_295J02_800.jpg",
+    "minerals": [],
+    "note": "Landing-site traverse start on the Jezero crater floor; regional mafic crater-floor units. USGS map unit: Njf (Jezero floor unit). CRISM 2.30 µm band depth 0.001 (below the 0.010 candidate threshold); DEM -2567 m, thermal inertia 347 SI. Hazcam frame from sol 14 shows the landing site.",
+    "geologyUnit": {
+      "unit": "Njf",
+      "label": "Jezero floor unit",
+      "color": "#ECADC4"
+    },
+    "spectral": {
+      "bandDepth2300": 0.0006,
+      "threshold": 0.01
+    },
+    "thermalInertia": 347.3,
+    "elevationM": -2567.1,
+    "locationBasis": "Perseverance traverse endpoint for sol 14 (M20 traverse GeoJSON)"
+  },
+  {
+    "id": "wp-02",
+    "name": "Skinner Ridge · delta front",
+    "lon": 77.406171,
+    "lat": 18.458931,
+    "kind": "science",
+    "sol": 490,
+    "imageUrl": "/data/jezero/pov/delta-panorama.webp",
+    "imageCredit": "NASA/JPL-Caltech/ASU/MSSS",
+    "sourceUrl": "https://science.nasa.gov/photojournal/detailed-panorama-of-mars-jezero-crater-delta/",
+    "minerals": [],
+    "note": "Swift Run core (sol 490) and the Mastcam-Z delta panorama (PIA24921, sols 466-474) from this front; regional clay and carbonate context. USGS map unit: NHjf2 (Jezero fan 2 unit). CRISM 2.30 µm band depth 0.004 (below the 0.010 candidate threshold); DEM -2499 m, thermal inertia 330 SI.",
+    "geologyUnit": {
+      "unit": "NHjf2",
+      "label": "Jezero fan 2 unit",
+      "color": "#397FBA"
+    },
+    "spectral": {
+      "bandDepth2300": 0.0045,
+      "threshold": 0.01
+    },
+    "thermalInertia": 330.3,
+    "elevationM": -2498.7,
+    "locationBasis": "Perseverance traverse endpoint for sol 490 (M20 traverse GeoJSON)"
+  },
+  {
+    "id": "wp-04",
+    "name": "High-inertia bench",
+    "lon": 77.36927,
+    "lat": 18.47989,
+    "kind": "science",
+    "sol": 766,
+    "imageUrl": "/data/jezero/pov/sol766-pov.webp",
+    "imageCredit": "NASA/JPL-Caltech/ASU/MSSS",
+    "sourceUrl": "https://mars.nasa.gov/mars2020/multimedia/raw-images/?sol=766",
+    "minerals": [],
+    "note": "Crater-floor bench with high thermal inertia, a rockier surface flagged by the planning assumption. USGS map unit: NHjf2 (Jezero fan 2 unit). CRISM 2.30 µm band depth 0.009 (below the 0.010 candidate threshold); DEM -2411 m, thermal inertia 403 SI.",
+    "geologyUnit": {
+      "unit": "NHjf2",
+      "label": "Jezero fan 2 unit",
+      "color": "#397FBA"
+    },
+    "spectral": {
+      "bandDepth2300": 0.0092,
+      "threshold": 0.01
+    },
+    "thermalInertia": 403.1,
+    "elevationM": -2410.9,
+    "locationBasis": "Perseverance traverse endpoint for sol 766 (M20 traverse GeoJSON)"
+  },
+  {
+    "id": "wp-05",
+    "name": "Upper delta margin",
+    "lon": 77.346647,
+    "lat": 18.495396,
+    "kind": "science",
+    "sol": 1000,
+    "imageUrl": "/data/jezero/pov/sol1000-pov.webp",
+    "imageCredit": "NASA/JPL-Caltech/ASU/MSSS",
+    "sourceUrl": "https://mars.nasa.gov/mars2020/multimedia/raw-images/?sol=1000",
+    "minerals": [
+      "phyllosilicates (weak 2.3 µm candidate)"
+    ],
+    "note": "Upper delta traverse position; regional fan-unit context. USGS map unit: NHjf2 (Jezero fan 2 unit). CRISM 2.30 µm band depth 0.012 (detected); DEM -2386 m, thermal inertia 276 SI.",
+    "geologyUnit": {
+      "unit": "NHjf2",
+      "label": "Jezero fan 2 unit",
+      "color": "#397FBA"
+    },
+    "spectral": {
+      "bandDepth2300": 0.0119,
+      "threshold": 0.01
+    },
+    "thermalInertia": 276.1,
+    "elevationM": -2386.1,
+    "locationBasis": "Perseverance traverse endpoint for sol 1000 (M20 traverse GeoJSON)"
+  }
+]

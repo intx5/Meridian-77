@@ -1,0 +1,47 @@
+{
+  "sourceUrl": "https://www.usgs.gov/maps/geologic-map-jezero-crater-and-nili-planum-region-mars",
+  "mapScale": "1:75,000",
+  "palette": "Application palette",
+  "units": [
+    {
+      "symbol": "Nue",
+      "label": "Upper etched unit",
+      "color": "#ba9b77"
+    },
+    {
+      "symbol": "NHjf2",
+      "label": "Jezero fan 2 unit",
+      "color": "#397fba"
+    },
+    {
+      "symbol": "Aeb",
+      "label": "Eolian bedform unit",
+      "color": "#ecdba0"
+    },
+    {
+      "symbol": "su",
+      "label": "Smooth unit, undivided",
+      "color": "#a4a9a0"
+    },
+    {
+      "symbol": "Nle",
+      "label": "Lower etched unit",
+      "color": "#eb907a"
+    },
+    {
+      "symbol": "cr",
+      "label": "Crater riim unit",
+      "color": "#866655"
+    },
+    {
+      "symbol": "Nnp1",
+      "label": "Nili Planum 1 unit",
+      "color": "#d2bd86"
+    },
+    {
+      "symbol": "Njf",
+      "label": "Jezero floor unit",
+      "color": "#ecadc4"
+    }
+  ]
+}
