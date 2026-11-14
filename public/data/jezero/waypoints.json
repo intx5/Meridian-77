@@ -81,13 +81,13 @@
     "lat": 18.495396,
     "kind": "science",
     "sol": 1000,
-    "imageUrl": "/data/jezero/pov/sol1000-pov.webp",
-    "imageCredit": "NASA/JPL-Caltech/ASU/MSSS",
-    "sourceUrl": "https://mars.nasa.gov/mars2020/multimedia/raw-images/?sol=1000",
+    "imageUrl": "/data/jezero/pov/upper-delta-sol1000-ncam.webp",
+    "imageCredit": "NASA/JPL-Caltech",
+    "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01000/ids/edr/browse/ncam/NRG_1000_0755717960_981ECM_N0474404SCAM08000_00_1LLJ01_800.jpg",
     "minerals": [
       "phyllosilicates (weak 2.3 µm candidate)"
     ],
-    "note": "Upper delta traverse position; regional fan-unit context. USGS map unit: NHjf2 (Jezero fan 2 unit). CRISM 2.30 µm band depth 0.012 (detected); DEM -2386 m, thermal inertia 276 SI.",
+    "note": "Upper delta traverse position; regional fan-unit context. USGS map unit: NHjf2 (Jezero fan 2 unit). CRISM 2.30 µm band depth 0.012 (detected); DEM -2386 m, thermal inertia 276 SI. Navcam frame from sol 1000 shows the upper-delta surface.",
     "geologyUnit": {
       "unit": "NHjf2",
       "label": "Jezero fan 2 unit",

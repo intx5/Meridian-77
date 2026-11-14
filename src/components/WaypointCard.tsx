@@ -53,7 +53,8 @@ export function WaypointList({ waypoints }: { waypoints: Waypoint[] }) {
         <span className="meta">{waypoints.length} cards</span>
       </div>
       <p className="mt-1 text-[10px] leading-relaxed text-faint">
-        Real Perseverance traverse positions. Mineral values are measured CRISM band depth at the footprint.
+        Real Perseverance traverse positions and surface frames, used as ground-truth proxies for future astronaut
+        waypoints. Mineral values are measured CRISM band depth at the footprint.
       </p>
 
       <div className="mt-2">
