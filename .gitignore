@@ -5,6 +5,8 @@ dist/
 *.tsbuildinfo
 .browser-check/
 .playwright-mcp/
+.superpowers/
+.worktrees/
 *.tif
 *.tiff
 *.img
