@@ -134,92 +134,38 @@ export function RouteComparison({
     aiResponse?.ok && aiResponse.aiVerified ? aiResponse.decision : null
 
   return (
-    <section aria-labelledby="route-comparison-heading">
-      <div className="flex items-baseline justify-between">
-        <h2 id="route-comparison-heading" className="heading">
-          Route comparison
-        </h2>
-        <span className="meta">same start / target</span>
-      </div>
-      <p className="mt-1 text-[13px] leading-relaxed text-faint">
-        Two pre-planned traverses; select one to load it into the map and field card.
-      </p>
-
-      <div className="mt-2 divide-y divide-line border-y border-line">
-        {analyses.map(({ route, budget, terrain, verdict, radiation, eva }) => {
-          const selected = selectedId === route.id
-          const marginTone = budget.marginHours < 0 ? 'danger' : budget.marginHours < 0.5 ? 'caution' : undefined
-          return (
-            <button
-              key={route.id}
-              type="button"
-              aria-pressed={selected}
-              onClick={() => onSelect(route.id)}
-              className={`block w-full border-l-2 py-4 pl-3 pr-2 text-left transition-colors ${
-                selected
-                  ? 'border-l-accent bg-surface-2/70'
-                  : 'border-l-transparent hover:border-l-line-2 hover:bg-surface-2/40'
-              }`}
-              style={selected ? { borderLeftColor: route.color } : undefined}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <span className="flex min-w-0 flex-1 items-baseline gap-2">
-                  <span className="h-2 w-2 shrink-0" style={{ backgroundColor: route.color }} aria-hidden />
-                  <span className="min-w-0 whitespace-normal text-[15px] font-semibold text-ink">{route.label}</span>
-                </span>
-                <span className="shrink-0 font-mono text-[14px] font-semibold" style={{ color: VERDICT_COLOR[verdict] }}>
-                  {verdict}
-                </span>
-              </div>
-
-              <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-3">
-                <Metric label="Total mission" value={formatDuration(budget.totalHours)} />
-                <Metric label="Max slope" value={`${terrain.maxSlopeDeg.toFixed(1)}°`} />
-                <Metric label="Return margin" value={formatDuration(budget.marginHours)} tone={marginTone} />
-                <Metric label="Distance" value={formatKm(terrain.totalKm)} />
-                {radiation ? (
-                  <>
-                    <Metric
-                      label="Est. radiation"
-                      value={`${radiation.totalModeledExposureMicroGy.toFixed(1)} µGy ±${radiation.uncertaintyPercent}%`}
-                      tone={radiation.scenarioId === 'sep_sep2017' ? 'caution' : undefined}
-                    />
-                    <Metric
-                      label="Rad. scenario"
-                      value={radiation.scenarioId === 'sep_sep2017' ? 'Sep 2017 SEP' : 'GCR Baseline'}
-                    />
-                  </>
-                ) : null}
-              </div>
-
-              {verdict === 'CAUTION' ? <CautionExplanation eva={eva} budget={budget} /> : null}
-              {budget.exceeded ? (
-                <p className="mt-1.5 text-[13px] leading-relaxed text-danger">
-                  Target stay exceeds max by {budget.excessMinutes} min.
-                </p>
-              ) : budget.dataInsufficient ? (
-                <p className="mt-1.5 text-[13px] leading-relaxed text-caution">Route crosses no-data terrain.</p>
-              ) : null}
-            </button>
-          )
-        })}
-      </div>
-
+    <section aria-labelledby="route-comparison-heading" className="space-y-5">
       {plannedAnalyses && plannedAnalyses.length > 0 ? (
-        <div className="mt-5 border-t border-line pt-4" aria-labelledby="ai-planner-heading">
+        <div className="border border-accent/40 bg-surface-2/40 p-3.5" aria-labelledby="ai-planner-heading">
           <div className="flex items-baseline justify-between">
-            <h3 id="ai-planner-heading" className="heading">
+            <h3 id="ai-planner-heading" className="heading text-accent">
               AI Route Planner
             </h3>
-            <span className="meta">A* + AI</span>
+            <span className="meta">A* + Random Forest ML</span>
           </div>
           <p className="mt-1 text-[13px] leading-relaxed text-faint">
             Select Point 1 and Point 2. Route analysis compares local terrain searches and the available AI
             candidate within the return budget. It prefers higher safety, then shorter mission time at equal safety.
           </p>
 
+          {onRunAiAnalysis ? (
+            <div className="mt-3">
+              <Button
+                type="button"
+                variant="default"
+                size="sm"
+                disabled={aiLoading}
+                onClick={onRunAiAnalysis}
+                className="h-10 w-full justify-between bg-accent px-3.5 font-mono text-[13px] font-semibold text-bg hover:bg-accent/90"
+              >
+                <span>{aiLoading ? 'Analyzing via ML…' : '▶ Run AI Analysis'}</span>
+                <span className="text-[12px] opacity-90">ml-local · R² 0.93</span>
+              </Button>
+            </div>
+          ) : null}
+
           {point1Label && point2Label ? (
-            <div className="mt-2 border border-line bg-surface-2/50 p-2 font-mono text-[13px]">
+            <div className="mt-2.5 border border-line bg-surface-2/60 p-2 font-mono text-[13px]">
               <div className="flex items-start justify-between gap-3">
                 <span className="text-faint">Point 1 (Start)</span>
                 <span className="truncate text-ink">{point1Label}</span>
@@ -298,22 +244,6 @@ export function RouteComparison({
               </div>
             ) : null}
           </div>
-
-          {onRunAiAnalysis ? (
-            <div className="mt-2.5">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={aiLoading}
-                onClick={onRunAiAnalysis}
-                className="w-full justify-between font-mono text-[13px]"
-              >
-                <span>{aiLoading ? 'Analyzing via ML…' : 'Run AI Analysis'}</span>
-                <span className="text-[13px] text-accent">ml-local</span>
-              </Button>
-            </div>
-          ) : null}
 
           {aiSelectionMessage ? (
             <p role="status" aria-label="Route selection" className="mt-2.5 border-l-2 border-signal bg-surface-2/50 p-2.5 text-[13px] leading-relaxed text-ink">
@@ -506,6 +436,78 @@ export function RouteComparison({
           </div>
         </div>
       ) : null}
+
+      <div>
+        <div className="flex items-baseline justify-between">
+          <h2 id="route-comparison-heading" className="heading">
+            Route comparison
+          </h2>
+          <span className="meta">same start / target</span>
+        </div>
+        <p className="mt-1 text-[13px] leading-relaxed text-faint">
+          Two pre-planned traverses; select one to load it into the map and field card.
+        </p>
+
+        <div className="mt-2 divide-y divide-line border-y border-line">
+          {analyses.map(({ route, budget, terrain, verdict, radiation, eva }) => {
+            const selected = selectedId === route.id
+            const marginTone = budget.marginHours < 0 ? 'danger' : budget.marginHours < 0.5 ? 'caution' : undefined
+            return (
+              <button
+                key={route.id}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => onSelect(route.id)}
+                className={`block w-full border-l-2 py-4 pl-3 pr-2 text-left transition-colors ${
+                  selected
+                    ? 'border-l-accent bg-surface-2/70'
+                    : 'border-l-transparent hover:border-l-line-2 hover:bg-surface-2/40'
+                }`}
+                style={selected ? { borderLeftColor: route.color } : undefined}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className="flex min-w-0 flex-1 items-baseline gap-2">
+                    <span className="h-2 w-2 shrink-0" style={{ backgroundColor: route.color }} aria-hidden />
+                    <span className="min-w-0 whitespace-normal text-[15px] font-semibold text-ink">{route.label}</span>
+                  </span>
+                  <span className="shrink-0 font-mono text-[14px] font-semibold" style={{ color: VERDICT_COLOR[verdict] }}>
+                    {verdict}
+                  </span>
+                </div>
+
+                <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-3">
+                  <Metric label="Total mission" value={formatDuration(budget.totalHours)} />
+                  <Metric label="Max slope" value={`${terrain.maxSlopeDeg.toFixed(1)}°`} />
+                  <Metric label="Return margin" value={formatDuration(budget.marginHours)} tone={marginTone} />
+                  <Metric label="Distance" value={formatKm(terrain.totalKm)} />
+                  {radiation ? (
+                    <>
+                      <Metric
+                        label="Est. radiation"
+                        value={`${radiation.totalModeledExposureMicroGy.toFixed(1)} µGy ±${radiation.uncertaintyPercent}%`}
+                        tone={radiation.scenarioId === 'sep_sep2017' ? 'caution' : undefined}
+                      />
+                      <Metric
+                        label="Rad. scenario"
+                        value={radiation.scenarioId === 'sep_sep2017' ? 'Sep 2017 SEP' : 'GCR Baseline'}
+                      />
+                    </>
+                  ) : null}
+                </div>
+
+                {verdict === 'CAUTION' ? <CautionExplanation eva={eva} budget={budget} /> : null}
+                {budget.exceeded ? (
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-danger">
+                    Target stay exceeds max by {budget.excessMinutes} min.
+                  </p>
+                ) : budget.dataInsufficient ? (
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-caution">Route crosses no-data terrain.</p>
+                ) : null}
+              </button>
+            )
+          })}
+        </div>
+      </div>
     </section>
   )
 }
