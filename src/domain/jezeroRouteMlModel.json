@@ -7,8 +7,11 @@
     "samples": 850,
     "trainSamples": 680,
     "validationSamples": 170,
+    "trainMae": 0.0211,
+    "trainR2": 0.9635,
     "validationMae": 0.0275,
     "validationR2": 0.932,
+    "oobR2": 0.9431,
     "nTrees": 27,
     "maxDepth": 13,
     "leakageAudit": {
@@ -19,6 +22,36 @@
       "scalerFitOnTrainOnly": true,
       "trainMeanMaxAbsDeviation": 0.0,
       "permutationNullR2": -0.1368
+    },
+    "overfittingAudit": {
+      "passed": true,
+      "trainR2": 0.9635,
+      "validationR2": 0.932,
+      "oobR2": 0.9431,
+      "r2GeneralizationGap": 0.0315,
+      "trainMae": 0.0211,
+      "validationMae": 0.0275,
+      "maeGap": 0.0064
+    },
+    "crossValidation": {
+      "folds": 5,
+      "foldR2Scores": [
+        0.9471,
+        0.9437,
+        0.9439,
+        0.9438,
+        0.9335
+      ],
+      "foldMaeScores": [
+        0.0258,
+        0.0242,
+        0.0258,
+        0.0262,
+        0.0273
+      ],
+      "meanR2": 0.9424,
+      "stdR2": 0.0046,
+      "meanMae": 0.0259
     }
   },
   "featureNames": [

@@ -510,4 +510,20 @@ describe('Real NASA Jezero dataset: A* Route A/B/C & EVA safety verification', (
     expect(audit.trainMeanMaxAbsDeviation).toBeLessThan(1e-10)
     expect(audit.permutationNullR2).toBeLessThan(0.05)
   })
+
+  it('19. verifies absence of overfitting (Train-Val R² gap, Out-of-Bag R²) and 5-Fold Spatial Cross-Validation stability', () => {
+    const info = getJezeroMlModelInfo()
+    const overfit = info.trainedOn.overfittingAudit
+    const cv = info.trainedOn.crossValidation
+
+    expect(overfit.passed).toBe(true)
+    expect(overfit.r2GeneralizationGap).toBeLessThan(0.06)
+    expect(overfit.oobR2).toBeGreaterThan(0.9)
+    expect(overfit.maeGap).toBeLessThan(0.015)
+
+    expect(cv.folds).toBe(5)
+    expect(cv.foldR2Scores).toHaveLength(5)
+    expect(cv.meanR2).toBeGreaterThan(0.9)
+    expect(cv.stdR2).toBeLessThan(0.025)
+  })
 })

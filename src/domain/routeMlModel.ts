@@ -27,8 +27,11 @@ interface JezeroMlModelArtifact {
     samples: number
     trainSamples: number
     validationSamples: number
+    trainMae: number
+    trainR2: number
     validationMae: number
     validationR2: number
+    oobR2: number
     nTrees: number
     maxDepth: number
     leakageAudit: {
@@ -39,6 +42,24 @@ interface JezeroMlModelArtifact {
       scalerFitOnTrainOnly: boolean
       trainMeanMaxAbsDeviation: number
       permutationNullR2: number
+    }
+    overfittingAudit: {
+      passed: boolean
+      trainR2: number
+      validationR2: number
+      oobR2: number
+      r2GeneralizationGap: number
+      trainMae: number
+      validationMae: number
+      maeGap: number
+    }
+    crossValidation: {
+      folds: number
+      foldR2Scores: number[]
+      foldMaeScores: number[]
+      meanR2: number
+      stdR2: number
+      meanMae: number
     }
   }
   featureNames: string[]

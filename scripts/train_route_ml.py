@@ -475,15 +475,18 @@ def main():
 
     # 2. Fit 27 bootstrapped Multi-Output CART Decision Trees (Random Forest, max_depth=13)
     n_trees = 27
+    max_depth = 13
     rng = np.random.default_rng(104)
     trees = []
+    boot_indices_list = []
     importances = np.zeros(X.shape[1], dtype=np.float64)
     for _ in range(n_trees):
         boot_idx = rng.integers(0, len(X_train), size=len(X_train))
+        boot_indices_list.append(set(int(i) for i in boot_idx))
         tree = fit_decision_tree(
             X_train[boot_idx],
             Y_train[boot_idx],
-            max_depth=13,
+            max_depth=max_depth,
             min_samples_leaf=3,
             rng=rng,
             max_features=9,
@@ -497,18 +500,101 @@ def main():
     rf_weight = 0.65
     ridge_weight = 0.35
 
-    def predict_batch(X_in: np.ndarray, Z_in: np.ndarray) -> np.ndarray:
+    def predict_batch_with_model(
+        X_in: np.ndarray,
+        Z_in: np.ndarray,
+        model_trees: list[dict],
+        r_weights: np.ndarray,
+        r_intercept: np.ndarray,
+    ) -> np.ndarray:
         rf_preds = np.zeros((len(X_in), 4), dtype=np.float64)
         for i, row in enumerate(X_in):
-            rf_preds[i] = np.mean([predict_tree_single(t, row) for t in trees], axis=0)
-        lin_preds = Z_in @ ridge_weights + ridge_intercept
+            rf_preds[i] = np.mean([predict_tree_single(t, row) for t in model_trees], axis=0)
+        lin_preds = Z_in @ r_weights + r_intercept
         return rf_weight * rf_preds + ridge_weight * lin_preds
 
-    val_preds = predict_batch(X_val, Z_val)
+    train_preds = predict_batch_with_model(X_train, Z_train, trees, ridge_weights, ridge_intercept)
+    train_mae = float(np.mean(np.abs(train_preds - Y_train)))
+    train_ss_res = float(np.sum((Y_train - train_preds) ** 2))
+    train_ss_tot = float(np.sum((Y_train - np.mean(Y_train, axis=0)) ** 2))
+    train_r2 = 1.0 - train_ss_res / max(1e-9, train_ss_tot)
+
+    val_preds = predict_batch_with_model(X_val, Z_val, trees, ridge_weights, ridge_intercept)
     mae = float(np.mean(np.abs(val_preds - Y_val)))
     ss_res = float(np.sum((Y_val - val_preds) ** 2))
     ss_tot = float(np.sum((Y_val - np.mean(Y_val, axis=0)) ** 2))
     r2 = 1.0 - ss_res / max(1e-9, ss_tot)
+
+    # Out-Of-Bag (OOB) evaluation on training set (each sample predicted only by trees that did not bootstrap it)
+    oob_preds = np.zeros_like(Y_train)
+    oob_valid_mask = np.zeros(len(X_train), dtype=bool)
+    lin_train_preds = Z_train @ ridge_weights + ridge_intercept
+    for i, row in enumerate(X_train):
+        unseen_trees = [trees[t_idx] for t_idx in range(n_trees) if i not in boot_indices_list[t_idx]]
+        if unseen_trees:
+            oob_valid_mask[i] = True
+            rf_oob = np.mean([predict_tree_single(t, row) for t in unseen_trees], axis=0)
+            oob_preds[i] = rf_weight * rf_oob + ridge_weight * lin_train_preds[i]
+    oob_ss_res = float(np.sum((Y_train[oob_valid_mask] - oob_preds[oob_valid_mask]) ** 2))
+    oob_ss_tot = float(np.sum((Y_train[oob_valid_mask] - np.mean(Y_train[oob_valid_mask], axis=0)) ** 2))
+    oob_r2 = 1.0 - oob_ss_res / max(1e-9, oob_ss_tot)
+
+    # --- 5-Fold Spatial Group Cross-Validation ---
+    n_folds = 5
+    fold_size = n_total // n_folds
+    cv_r2_scores: list[float] = []
+    cv_mae_scores: list[float] = []
+    for fold_idx in range(n_folds):
+        val_start = fold_idx * fold_size
+        val_end = val_start + fold_size if fold_idx < n_folds - 1 else n_total
+        val_mask = np.zeros(n_total, dtype=bool)
+        val_mask[val_start:val_end] = True
+        tr_mask = ~val_mask
+
+        X_tr_f, Y_tr_f = X[tr_mask], Y[tr_mask]
+        X_va_f, Y_va_f = X[val_mask], Y[val_mask]
+
+        # Fit scaler strictly inside fold training split
+        f_mean = np.mean(X_tr_f, axis=0)
+        f_std = np.where(np.std(X_tr_f, axis=0) < 1e-6, 1.0, np.std(X_tr_f, axis=0))
+        Z_tr_f = (X_tr_f - f_mean) / f_std
+        Z_va_f = (X_va_f - f_mean) / f_std
+
+        XtX_f = Z_tr_f.T @ Z_tr_f + alpha_ridge * np.eye(Z_tr_f.shape[1])
+        r_w_f = np.linalg.solve(XtX_f, Z_tr_f.T @ (Y_tr_f - np.mean(Y_tr_f, axis=0)))
+        r_b_f = np.mean(Y_tr_f, axis=0)
+
+        cv_rng = np.random.default_rng(300 + fold_idx)
+        fold_trees = []
+        for _ in range(n_trees):
+            b_idx = cv_rng.integers(0, len(X_tr_f), size=len(X_tr_f))
+            f_tree = fit_decision_tree(
+                X_tr_f[b_idx],
+                Y_tr_f[b_idx],
+                max_depth=max_depth,
+                min_samples_leaf=3,
+                rng=cv_rng,
+                max_features=9,
+            )
+            fold_trees.append(strip_gain(f_tree))
+
+        f_preds = predict_batch_with_model(X_va_f, Z_va_f, fold_trees, r_w_f, r_b_f)
+        f_mae = float(np.mean(np.abs(f_preds - Y_va_f)))
+        f_ss_res = float(np.sum((Y_va_f - f_preds) ** 2))
+        f_ss_tot = float(np.sum((Y_va_f - np.mean(Y_va_f, axis=0)) ** 2))
+        f_r2 = 1.0 - f_ss_res / max(1e-9, f_ss_tot)
+        cv_r2_scores.append(round(f_r2, 4))
+        cv_mae_scores.append(round(f_mae, 4))
+
+    cv_mean_r2 = float(np.mean(cv_r2_scores))
+    cv_std_r2 = float(np.std(cv_r2_scores))
+    cv_mean_mae = float(np.mean(cv_mae_scores))
+    r2_gap = float(train_r2 - r2)
+    mae_gap = float(mae - train_mae)
+
+    assert r2_gap < 0.06, f"Overfitting detected: Train-Val R^2 gap {r2_gap:.4f} >= 0.06"
+    assert oob_r2 > 0.90, f"Low OOB R^2 detected: {oob_r2:.4f}"
+    assert cv_mean_r2 > 0.90 and cv_std_r2 < 0.025, f"Cross-validation instability: mean={cv_mean_r2:.4f}, std={cv_std_r2:.4f}"
 
     # Permutation Null Test (Y-shuffle): verify zero target leakage when labels are shuffled
     perm_rng = np.random.default_rng(999)
@@ -532,6 +618,26 @@ def main():
         "permutationNullR2": round(perm_r2, 4),
     }
 
+    overfitting_audit = {
+        "passed": True,
+        "trainR2": round(train_r2, 4),
+        "validationR2": round(r2, 4),
+        "oobR2": round(oob_r2, 4),
+        "r2GeneralizationGap": round(r2_gap, 4),
+        "trainMae": round(train_mae, 4),
+        "validationMae": round(mae, 4),
+        "maeGap": round(mae_gap, 4),
+    }
+
+    cross_validation = {
+        "folds": n_folds,
+        "foldR2Scores": cv_r2_scores,
+        "foldMaeScores": cv_mae_scores,
+        "meanR2": round(cv_mean_r2, 4),
+        "stdR2": round(cv_std_r2, 4),
+        "meanMae": round(cv_mean_mae, 4),
+    }
+
     model_artifact = {
         "modelId": "jezero-ml",
         "modelType": "RandomForest+RidgeEnsemble",
@@ -541,11 +647,16 @@ def main():
             "samples": n_total,
             "trainSamples": n_train,
             "validationSamples": n_total - n_train,
+            "trainMae": round(train_mae, 4),
+            "trainR2": round(train_r2, 4),
             "validationMae": round(mae, 4),
             "validationR2": round(r2, 4),
+            "oobR2": round(oob_r2, 4),
             "nTrees": n_trees,
-            "maxDepth": 13,
+            "maxDepth": max_depth,
             "leakageAudit": leakage_audit,
+            "overfittingAudit": overfitting_audit,
+            "crossValidation": cross_validation,
         },
         "featureNames": FEATURE_NAMES,
         "targetNames": TARGET_NAMES,
@@ -564,7 +675,9 @@ def main():
 
     MODEL_OUT.write_text(json.dumps(model_artifact, indent=2) + "\n", encoding="utf-8")
     print(f"Trained {model_artifact['modelType']} on {n_total} Jezero traverses.")
-    print(f"Validation MAE: {mae:.4f} | Validation R^2: {r2:.4f}")
+    print(f"Train R^2: {train_r2:.4f} | Val R^2: {r2:.4f} | OOB R^2: {oob_r2:.4f} | R^2 Gap: {r2_gap:.4f}")
+    print(f"Train MAE: {train_mae:.4f} | Val MAE: {mae:.4f} | MAE Gap: {mae_gap:.4f}")
+    print(f"5-Fold CV R^2: {cv_mean_r2:.4f} +/- {cv_std_r2:.4f} (folds: {cv_r2_scores})")
     print(f"Saved model artifact to {MODEL_OUT} ({MODEL_OUT.stat().st_size} bytes)")
 
 
