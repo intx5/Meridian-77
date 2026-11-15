@@ -1,8 +1,8 @@
 # Meridian 77 · Jezero EVA Planner
 
-A local-first web planner for a six-hour astronaut traverse across the Jezero delta front. Optical, topographic, thermal-inertia and CRISM mineral-indicator layers share one projection; a clicked route is sampled against the DEM and returns distance, time, elevation, slope, hazards and an explainable GO / CAUTION / NO-GO verdict.
+A local-first web planner for a six-hour astronaut traverse across the Jezero delta front. Optical, topographic, geology, thermal-inertia, surface-temperature, CRISM mineral-indicator, aeolian sand/dune and radiation layers share one projection; a clicked route is sampled against the DEM and returns distance, time, elevation, slope, hazards and an explainable GO / CAUTION / NO-GO verdict.
 
-Built from the brief in `proje.txt`. Not NASA software and not flight-certified.
+Independent open-source decision-support prototype. Not official NASA software, not flight-certified, and contains no NASA logos, insignia or branding.
 
 ## Visual direction
 
@@ -27,7 +27,7 @@ The planner serves its terrain, overlays and station imagery from `public/data/j
 ## What works
 
 - **Map**: Leaflet `CRS.Simple` over the Jezero delta-front mosaic, graticule, hover coordinates with DEM elevation, Mars scale bar, zoom, recenter. The map refits after the panel reaches its final size and on resize.
-- **Layers**: optical, topography with slope, USGS geology, thermal inertia, mineralogy, sand and radiation. The radiation controls also include an experimental topographic sky-visibility overlay.
+- **Layers**: optical, topography with slope, USGS geology, thermal inertia, surface temperature (`°C`), mineralogy, sand and radiation. The radiation controls also include an experimental topographic sky-visibility overlay.
 - **Route comparison**: two pre-planned routes between the same start (Octavia E. Butler Landing) and science target (Skinner Ridge). Side-by-side total mission time, maximum slope, return margin and verdict. Selecting Route A or Route B loads it into the map and field card; the other route stays visible as a dim reference.
 - **Route**: click the map or enter planetocentric lon/lat. Clicked markers do not add points. Undo and clear. Intermediate terrain is sampled every ~9 m; no-data cells become dashed unknown segments.
 - **Analysis**: haversine distance on the Mars mean radius (3389.5 km), walk time plus 20 minutes per science stop, ascent/descent, max/mean slope, hazard count, elevation AreaChart.
@@ -48,6 +48,7 @@ The planner serves its terrain, overlays and station imagery from `public/data/j
 | Mars 2020 DEM mosaic | Elevation, hillshade, slope | 9.77 m display grid | [Murray Lab, Caltech](https://murray-lab.caltech.edu/Mars2020/index.html) |
 | USGS Jezero geologic map | Geology layer and target-unit context | 1:75,000 | [USGS](https://www.usgs.gov/maps/geologic-map-jezero-crater-and-nili-planum-region-mars) |
 | THEMIS quantitative thermal inertia | Thermal layer and hazard assumption | 100 m source, warped to 19.5 m display grid | [THEMIS TI mosaic](https://murray-lab.caltech.edu/Mars2020/data/ThemisTI/THEMIS_TI_Quantitative.zip) |
+| Surface Temperature (THEMIS TI + DEM insolation + MEDA TIRS ref) | Midday EVA ground temperature (`-40.0°C` to `-8.5°C`) | 19.5 m aligned display grid | [NASA PDS MEDA](https://pds-atmospheres.nmsu.edu/data_and_services/atmospheres_data/PERSEVERANCE/meda.html) |
 | CRISM HRL000040FF MTRDR | 2.30 µm absorption indicator | 36 m | [PDS Geosciences](https://pds-geosciences.wustl.edu/mro/mro-m-crism-5-rdr-mptargeted-v1/mrocr_2101/data/hrl000040ff/hrl000040ff_07_if183j_mtr3.img) |
 | USGS Jezero geologic map | Map unit on science cards | 1:75,000 | [USGS](https://www.usgs.gov/maps/geologic-map-jezero-crater-and-nili-planum-region-mars) |
 | Perseverance traverse GeoJSON | Waypoint coordinates | — | NASA Mars 2020 traverse path |
@@ -107,6 +108,47 @@ then higher safety score, shorter mission time at equal safety, and lower common
 current route. Radiation and the science-weighted composite score are advisory. The selection message reports the
 winning route's measured trade-off among the candidates searched. Responses arriving after a mission edit cannot
 replace the edited route.
+
+## Explainable AI (XAI) & Local Route ML Model (`jezero-ml`)
+
+Route C optimization uses a white-box **Random Forest (`n_trees=27`, `max_depth=13`, 65% weight) + Ridge Regression (`alpha=4.0`, 35% weight)** multi-output ensemble (`src/domain/jezeroRouteMlModel.json`, trained via `scripts/train_route_ml.py` on `850` unique Jezero traverses sampled from the real Mars 2020 DEM, HiRISE/CTX aeolian sand/dune grid, and THEMIS thermal inertia raster).
+
+| Validation / Audit Metric | Value | Verification Status |
+| --- | --- | --- |
+| **Dataset (`samples`)** | `850` unique Jezero corridors (`680` Train / `170` Validation) | `0` shared start/end corridors (`sharedCorridorCount = 0`) |
+| **Hold-out Validation $R^2$ / MAE** | **`0.9320`** / **`0.0275`** | Verified on 170 unseen traverses |
+| **Out-Of-Bag (OOB) $R^2$** | **`0.9431`** | Evaluated strictly on trees that did not bootstrap each sample |
+| **5-Fold Spatial Cross-Validation $R^2$** | **`0.9424 ± 0.0046`** | Folds: `[0.9471, 0.9437, 0.9439, 0.9438, 0.9335]` |
+| **Overfitting Generalization Gap ($\Delta R^2$)** | **`0.0315`** (`Train 0.9635` vs `Val 0.9320`) | Passed (`< 0.06` threshold) |
+| **Y-Permutation Null Test ($R^2$)** | **`-0.1368`** | Passed (`< 0.05`, confirms zero target/scaler leakage) |
+
+### XAI Visualizations (`docs/xai/`)
+
+1. **Global Feature Importance (MDI vs. Validation Permutation $\Delta R^2$):**
+   ![Global Feature Importance](docs/xai/01_feature_importance_mdi_vs_permutation.png)
+2. **Partial Dependence Plots (PDP & $\pm 1\sigma$ ICE Bands):**
+   ![Partial Dependence Curves](docs/xai/02_partial_dependence_curves.png)
+3. **Local Feature Attribution (SHAP-Style Marginal Contribution Waterfall):**
+   ![Local SHAP Waterfall](docs/xai/03_local_shap_waterfall_octavia_delta.png)
+4. **Validation Parity Plot & Residual Distribution ($N=170$):**
+   ![Parity and Residuals](docs/xai/04_parity_and_residuals.png)
+5. **Overfitting, Out-Of-Bag, 5-Fold Spatial CV & Data Leakage Audit:**
+   ![Overfitting and Cross-Validation Audit](docs/xai/05_overfitting_leakage_cv_audit.png)
+
+## Use of Super Intelligence (SI) & AI Disclosure
+
+In accordance with the **NASA Space Apps Challenge Use of Super Intelligence (SI) Policy**, we clearly disclose how and where SI and machine-learning tools were utilized in this project:
+
+- **Code and Data (SI Acknowledged in Descriptive Text & Metadata):**
+  - **Software Engineering & Test Assistance:** AI/SI coding assistants were used to accelerate TypeScript/React UI scaffolding, 3D WebGL tile pipeline scripting (`scripts/prepare_*.py`), and unit/browser test authoring (`src/domain/*.test.ts`). All physical equations (Mars `3389.5 km` haversine distance, 6-hour EVA return budget, 16-azimuth DEM sky-view factor, and CRISM 2.30 µm band depth) are deterministic and verified by `109` automated unit tests.
+  - **Local Route Optimization Model (`src/domain/jezeroRouteMlModel.json`):** The runtime route optimizer (`jezero-ml`) is a local, deterministic classical machine-learning model (27-tree CART Random Forest + Ridge Regression ensemble) trained on measured NASA Mars 2020 DEM, HiRISE/CTX, and THEMIS raster features (`scripts/train_route_ml.py`). No external LLM APIs are called during application runtime.
+  - **XAI Diagnostic Plots (`docs/xai/`):** The 5 scientific XAI charts (`docs/xai/*.png`, `*.svg`) are deterministically plotted by `scripts/generate_xai_charts.py` (`matplotlib`) from the trained model weights and validation split; each chart includes an explicit footer watermark disclosing its SI/ML-assisted provenance.
+- **Images and Videos (Authentic Archival Data — Zero Generative Imagery):**
+  - **No** generative AI/SI image or video synthesis tools were used to create planetary maps, terrain textures, or rover photographs. Every orbital raster (`optical.webp`, `hillshade.webp`, `geology.webp`, `thermal.webp`, `temperature.webp`, `mineralogy.webp`, `sand.webp`, `radiation.webp`) and every rover surface frame (`octavia-sol14-hazcam.webp`, `skinner-ridge-pia24925.webp`, `sol766-pov.webp`, `upper-delta-sol1000-ncam.webp`, `delta-panorama.webp`) is derived directly from official NASA PDS, USGS Astrogeology, Caltech Murray Lab, and ASU/MSSS archives.
+- **Audio:**
+  - No audio or SI-generated audio is used in this project.
+- **NASA Branding Compliance:**
+  - This project does **not** use, contain, or modify any NASA logos, insignia, flags, or official mission identifiers.
 
 ## Verification
 

@@ -105,6 +105,17 @@ def compute_r2(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 
 
 def save_both(fig: plt.Figure, stem: str):
+    fig.text(
+        0.99,
+        0.006,
+        "SI/ML-Assisted Diagnostic Plot · Local Random Forest + Ridge Model (Meridian 77 · No NASA Branding)",
+        ha="right",
+        va="bottom",
+        fontsize=8,
+        color=TEXT_MUTED,
+        alpha=0.85,
+        style="italic",
+    )
     png_path = OUT_DIR / f"{stem}.png"
     svg_path = OUT_DIR / f"{stem}.svg"
     fig.savefig(png_path, dpi=300, bbox_inches="tight", facecolor=BG_DARK)

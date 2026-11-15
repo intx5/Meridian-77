@@ -302,9 +302,11 @@ export function MissionBrief({
           </div>
 
           <footer className="mt-6 flex items-end justify-between gap-6 border-t border-[#bfb5a4] pt-3">
-            <p className="max-w-[62ch] text-[9px] leading-relaxed text-[#6b6153]">
-              Meridian 77 is a planning aid built with local NASA, USGS and ASU data. It is not flight software, a
-              certified traverse plan, or a substitute for mission operations review.
+            <p className="max-w-[68ch] text-[9px] leading-relaxed text-[#6b6153]">
+              Meridian 77 is an independent planning aid built with archival NASA PDS, USGS and ASU datasets. SI/AI
+              disclosure: code and test suites were developed with SI coding assistance, and Route C uses a local
+              Random Forest + Ridge ML ensemble (`jezero-ml`); all planetary imagery is authentic archival data and no
+              NASA logos or branding are used. Not flight software or a substitute for mission operations review.
             </p>
             <Button variant="outline" size="sm" onClick={() => window.print()} className="no-print shrink-0">
               Print / PDF

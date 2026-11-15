@@ -3,6 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "siDisclosure": {
+    "policy": "NASA Space Apps Challenge Use of Super Intelligence (SI) Compliance",
+    "codeAndData": "SI coding assistants were used to assist in TypeScript/React UI implementation, Python raster preparation scripts, and automated test suites. Runtime route optimization (src/domain/jezeroRouteMlModel.json) uses a local 27-tree CART Random Forest + Ridge Regression ensemble trained on NASA Mars 2020 DEM, HiRISE/CTX, and THEMIS rasters.",
+    "imagesAndVideos": "All planetary maps, DEMs, and rover surface frames are authentic NASA/JPL-Caltech/USGS/ASU/MSSS archival datasets. XAI diagnostic charts in docs/xai/ include visible SI/ML-assisted watermarks.",
+    "nasaBranding": "Contains no NASA logos, flags, insignia, or modified branding elements."
+  },
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",
