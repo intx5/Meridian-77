@@ -1,4 +1,4 @@
-import { FileText, Presentation } from 'lucide-react'
+import { FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useMissionStore } from '@/store/useMissionStore'
 import type { MissionTarget } from '@/types'
@@ -26,14 +26,6 @@ export function TopBar({ region, target }: { region: string; target: MissionTarg
       <div className="ml-auto flex items-center gap-3 pr-4 sm:pr-5">
         <span className="meta hidden tabular-nums sm:inline">{String(routeLength).padStart(2, '0')} pts</span>
         <span className="meta hidden border-l border-line pl-4 md:inline">local data</span>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => window.open('/sunum.html', '_blank', 'noopener,noreferrer')}
-        >
-          <Presentation className="h-3 w-3" aria-hidden />
-          Sunum
-        </Button>
         <Button variant="outline" size="sm" onClick={() => setBriefOpen(true)}>
           <FileText className="h-3 w-3" aria-hidden />
           Mission brief

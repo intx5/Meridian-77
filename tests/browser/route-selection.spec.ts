@@ -160,21 +160,6 @@ test('duplicating a coordinate cannot issue a return-by plan', async ({ page }) 
   await expect(fieldCard.getByText('Latest return', { exact: true }).locator('..')).toHaveText('Latest return—')
 })
 
-test('the presentation loads the local topography image in both map previews', async ({ page }) => {
-  await page.goto('/')
-  const opened = page.context().waitForEvent('page')
-  await page.getByRole('button', { name: 'Sunum', exact: true }).click()
-  const presentation = await opened
-  await expect(presentation).toHaveURL(/\/sunum\.html$/)
-  const intro = presentation.getByAltText('Jezero Topoğrafya Katmanı', { exact: true })
-  await expect.poll(() => intro.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0)
-  await presentation.getByRole('button', { name: /Sonraki/ }).click()
-  await presentation.getByRole('button', { name: /Topoğrafya/ }).click()
-  const preview = presentation.locator('#layer-preview-img')
-  await expect(preview).toHaveAttribute('src', /hillshade\.webp$/)
-  await expect.poll(() => preview.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0)
-})
-
 test('an unreachable search result cannot replace the current traverse', async ({ page }) => {
   await page.route('**/data/jezero/dem.json', route => route.fulfill({ json: {
     bounds: [77.29436321794068, 18.39402047680302, 77.46306926652184, 18.562726525384175],
