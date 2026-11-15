@@ -91,7 +91,7 @@
       "id": "mineralogy",
       "label": "Mineralogy · CRISM",
       "imageUrl": "/data/jezero/mineralogy.webp",
-      "sourceUrl": "https://pds-geosciences.wustl.edu/mro/mro-m-crism-5-rdr-mptargeted-v1/mrocr_2101/data/hrl000040ff/hrl000040ff_07_if183j_mtr3.img",
+      "sourceUrl": "https://ode.rsl.wustl.edu/mars/indexProductPage.aspx?product_id=HRL000040FF_07_IF183J_MTR3",
       "resolution": "36 m source, 39 m display grid",
       "units": "continuum-removed band depth",
       "legend": [

@@ -49,7 +49,7 @@ The planner serves its terrain, overlays and station imagery from `public/data/j
 | USGS Jezero geologic map | Geology layer and target-unit context | 1:75,000 | [USGS](https://www.usgs.gov/maps/geologic-map-jezero-crater-and-nili-planum-region-mars) |
 | THEMIS quantitative thermal inertia | Thermal layer and hazard assumption | 100 m source, warped to 19.5 m display grid | [THEMIS TI mosaic](https://murray-lab.caltech.edu/Mars2020/data/ThemisTI/THEMIS_TI_Quantitative.zip) |
 | Surface Temperature (THEMIS TI + DEM insolation + MEDA TIRS ref) | Midday EVA ground temperature (`-40.0°C` to `-8.5°C`) | 19.5 m aligned display grid | [NASA PDS MEDA](https://pds-atmospheres.nmsu.edu/data_and_services/atmospheres_data/PERSEVERANCE/meda.html) |
-| CRISM HRL000040FF MTRDR | 2.30 µm absorption indicator | 36 m | [PDS Geosciences](https://pds-geosciences.wustl.edu/mro/mro-m-crism-5-rdr-mptargeted-v1/mrocr_2101/data/hrl000040ff/hrl000040ff_07_if183j_mtr3.img) |
+| CRISM HRL000040FF MTRDR | 2.30 µm absorption indicator | 36 m | [PDS Geosciences ODE](https://ode.rsl.wustl.edu/mars/indexProductPage.aspx?product_id=HRL000040FF_07_IF183J_MTR3) |
 | USGS Jezero geologic map | Map unit on science cards | 1:75,000 | [USGS](https://www.usgs.gov/maps/geologic-map-jezero-crater-and-nili-planum-region-mars) |
 | Perseverance traverse GeoJSON | Waypoint coordinates | — | NASA Mars 2020 traverse path |
 | Mastcam-Z frames and PIA24925 / PIA24921 mosaics | Surface views | — | NASA/JPL-Caltech/ASU/MSSS |
