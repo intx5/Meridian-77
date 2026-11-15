@@ -168,5 +168,5 @@ src/
   types/
 scripts/           reproducible raster and waypoint preparation
 public/data/jezero local layers, DEM, waypoints, POV imagery
-docs/              implementation plan and decisions
+docs/              XAI diagnostic charts and terrain source verification
 ```

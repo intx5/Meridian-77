@@ -27,7 +27,9 @@ import {
   type CandidateRouteId,
   type CandidateRouteMetrics,
   validateAiDecision,
+  validateAiPlanRequest,
 } from '@/domain/aiPlannerSchema'
+import { predictRouteWithMl } from '@/domain/routeMlModel'
 import { loadMissionData, type MissionData } from '@/domain/data'
 import { buildTerrainProfile, steepestSegment } from '@/domain/dem'
 import { computeEva, EVA_CONFIG, intermediateScienceStopMinutes } from '@/domain/eva'
@@ -503,9 +505,31 @@ function Planner({ data }: { data: MissionData }) {
           body: JSON.stringify(requestBody),
           signal: AbortSignal.timeout(50_000),
         })
-        response = (await res.json()) as AiPlanResponse
+        const contentType = res.headers.get('content-type') ?? ''
+        if (res.status === 404 || !contentType.includes('application/json')) {
+          const t0 = performance.now()
+          const validated = validateAiPlanRequest(requestBody)
+          const decision = predictRouteWithMl(validated)
+          response = {
+            ok: true,
+            aiVerified: true,
+            cached: false,
+            model: 'jezero-ml',
+            decision,
+            telemetry: {
+              requestCount: 1,
+              cacheHits: 0,
+              promptTokens: 0,
+              completionTokens: 0,
+              totalTokens: 0,
+              latencyMs: Math.max(1, Math.round(performance.now() - t0)),
+            },
+          }
+        } else {
+          response = (await res.json()) as AiPlanResponse
+        }
         if (typeof response?.ok !== 'boolean' ||
-          (response.ok && (!res.ok || response.aiVerified !== true || !response.telemetry))) {
+          (response.ok && ((!res.ok && res.status !== 404) || response.aiVerified !== true || !response.telemetry))) {
           throw new Error('The AI endpoint returned an invalid analysis.')
         }
         if (response.ok) response = { ...response, decision: validateAiDecision(response.decision) }
