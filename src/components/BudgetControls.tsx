@@ -23,8 +23,8 @@ function Slider({
   return (
     <label htmlFor={id} className="block">
       <span className="flex items-baseline justify-between gap-2">
-        <span className="text-[10px] text-muted">{label}</span>
-        <span className="num font-mono text-[10px] text-ink">
+        <span className="text-[13px] text-muted">{label}</span>
+        <span className="num font-mono text-[13px] text-ink">
           {value} {suffix}
         </span>
       </span>
@@ -57,7 +57,8 @@ export function BudgetControls({
 }) {
   const [stayMin, stayMax] = BUDGET_CONFIG.maxStayRangeMinutes
   const [reserveMin, reserveMax] = BUDGET_CONFIG.reserveRangeMinutes
-  const over = budget.exceeded && !budget.dataInsufficient
+  const hasReturnPlan = !budget.dataInsufficient && budget.targetReachable
+  const over = hasReturnPlan && budget.exceeded
 
   return (
     <section aria-labelledby="budget-controls-heading" className="border-t border-line pt-3">
@@ -67,7 +68,7 @@ export function BudgetControls({
         </h2>
         <span className="meta">{budget.timeLimitHours} h EVA</span>
       </div>
-      <p className="mt-1 text-[10px] leading-relaxed text-faint">
+      <p className="mt-1 text-[13px] leading-relaxed text-faint">
         The jury control. Increase the sample stop until the return margin disappears.
       </p>
 
@@ -96,18 +97,18 @@ export function BudgetControls({
 
       <div className="mt-2 flex items-baseline justify-between border-t border-line pt-2">
         <span className="meta">max target stay</span>
-        <span className={`num font-mono text-[11px] ${over ? 'text-danger' : 'text-ink'}`}>
-          {budget.maxTargetStayMinutes} min
+        <span className={`num font-mono text-[13px] ${over ? 'text-danger' : 'text-ink'}`}>
+          {hasReturnPlan ? `${budget.maxTargetStayMinutes} min` : '—'}
         </span>
       </div>
 
       {over ? (
-        <p role="status" className="mt-1.5 text-[10px] leading-relaxed text-danger">
+        <p role="status" className="mt-1.5 text-[13px] leading-relaxed text-danger">
           Sample stop exceeds max stay by {budget.excessMinutes} min. The return reserve is at risk.
         </p>
       ) : null}
       {!budget.targetReachable && !budget.dataInsufficient ? (
-        <p role="status" className="mt-1.5 text-[10px] leading-relaxed text-danger">
+        <p role="status" className="mt-1.5 text-[13px] leading-relaxed text-danger">
           The target cannot be reached and returned from within the {budget.timeLimitHours} h budget.
         </p>
       ) : null}

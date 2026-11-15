@@ -82,6 +82,17 @@ describe('terrain profile', () => {
     expect(profile.samples.every((s) => s.elevationM === null)).toBe(true)
   })
 
+  it('does not let repeated points on known ground dilute the distance with missing elevation', () => {
+    const gapped: RasterGrid = { ...flat, values: [100, 100, -9999, 100, 100, -9999, 100, 100, -9999] }
+    const start = { lon: 0.02, lat: 0.05 }
+    const end = { lon: 0.08, lat: 0.05 }
+    const options = { spacingKm: 0.02 }
+    const original = buildTerrainProfile(gapped, [start, end], options)
+    const withDuplicates = buildTerrainProfile(gapped, [...Array(1000).fill(start), end], options)
+    expect(original.unknownFraction).toBeGreaterThan(0.05)
+    expect(withDuplicates.unknownFraction).toBeCloseTo(original.unknownFraction, 8)
+  })
+
   it('never makes a profile from a single point', () => {
     const profile = buildTerrainProfile(flat, [{ lon: 0.05, lat: 0.05 }])
     expect(profile.totalKm).toBe(0)

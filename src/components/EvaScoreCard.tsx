@@ -36,11 +36,11 @@ export function EvaScoreCard({
           {eva.breakdown.map((item) => (
             <li key={item.factor} className="border-b border-line py-2">
               <div className="flex items-baseline justify-between gap-3">
-                <span className="text-[11px] text-ink">{item.factor}</span>
+                <span className="text-[13px] text-ink">{item.factor}</span>
                 <span className="flex items-baseline gap-2">
                   <span className="meta tabular-nums text-muted">{item.value}</span>
                   <span
-                    className="w-8 text-right font-mono text-[10px] tabular-nums"
+                    className="w-8 text-right font-mono text-[13px] tabular-nums"
                     style={{
                       color:
                         item.penalty > 0 ? 'var(--danger)' : item.penalty < 0 ? 'var(--go)' : 'var(--faint)',
@@ -50,12 +50,12 @@ export function EvaScoreCard({
                   </span>
                 </span>
               </div>
-              <p className="mt-0.5 pr-10 text-[9.5px] leading-relaxed text-faint">{item.reason}</p>
+              <p className="mt-0.5 pr-10 text-[13px] leading-relaxed text-faint">{item.reason}</p>
               {item.factor === 'slope' && terrain.samples.length ? (
                 <button
                   type="button"
                   onClick={showSteepest}
-                  className="mt-1 text-[9px] text-signal hover:underline"
+                  className="mt-1 text-[13px] text-signal hover:underline"
                 >
                   Show steepest segment on map
                 </button>
@@ -64,16 +64,16 @@ export function EvaScoreCard({
           ))}
         </ul>
       ) : (
-        <p className="mt-2 text-[10.5px] text-faint">The ledger fills once the route has two points.</p>
+        <p className="mt-2 text-[13px] text-faint">The ledger fills once the route has two points.</p>
       )}
 
       <details className="mt-3">
-        <summary className="cursor-pointer list-none text-[10px] text-muted hover:text-ink">
+        <summary className="cursor-pointer list-none text-[13px] text-muted hover:text-ink">
           Assumptions behind the score
         </summary>
         <ul className="mt-2 space-y-1.5">
           {EVA_ASSUMPTIONS.map((assumption) => (
-            <li key={assumption} className="border-l border-line pl-2.5 text-[9.5px] leading-relaxed text-faint">
+            <li key={assumption} className="border-l border-line pl-2.5 text-[13px] leading-relaxed text-faint">
               {assumption}
             </li>
           ))}

@@ -1,4 +1,4 @@
-import type { LonLat, RasterGrid } from '@/types'
+import type { Bounds, LonLat, RasterGrid } from '@/types'
 import { haversineKm, interpolateSegment } from './geo'
 
 export interface DemSample extends LonLat {
@@ -28,6 +28,28 @@ export interface TerrainOptions {
   spacingKm?: number
   cautionSlopeDeg?: number
   noGoSlopeDeg?: number
+}
+
+export function sameRasterBounds(a: number[], b: number[], tolerance = 1e-9): boolean {
+  return Array.isArray(a) && a.length === 4 && b.length === 4 &&
+    a.every((value, index) => Number.isFinite(value) && Math.abs(value - b[index]) < tolerance)
+}
+
+export function rasterCellCount(
+  filename: string,
+  raster: Pick<RasterGrid, 'bounds' | 'width' | 'height'>,
+  bounds: Bounds,
+  boundsTolerance?: number,
+): number {
+  if (!raster || !sameRasterBounds(raster.bounds, bounds, boundsTolerance)) {
+    throw new Error(`${filename}: bounds do not match the region`)
+  }
+  const { width, height } = raster
+  if (!Number.isSafeInteger(width) || !Number.isSafeInteger(height) || width <= 0 || height <= 0 ||
+    !Number.isSafeInteger(width * height)) {
+    throw new Error(`${filename}: grid dimensions must be positive integers`)
+  }
+  return width * height
 }
 
 export interface SteepestSegment {
@@ -114,7 +136,10 @@ export function buildTerrainProfile(
   const caution = options.cautionSlopeDeg ?? 15
   const path: LonLat[] = []
   for (let i = 1; i < route.length; i += 1) {
-    path.push(...interpolateSegment(route[i - 1], route[i], spacingKm))
+    const previous = route[i - 1]
+    const current = route[i]
+    if (previous.lon === current.lon && previous.lat === current.lat) continue
+    for (const point of interpolateSegment(previous, current, spacingKm)) path.push(point)
   }
   path.push(route.at(-1)!)
 
@@ -134,17 +159,19 @@ export function buildTerrainProfile(
   let maxSlope = 0
   let slopeSum = 0
   let slopeCount = 0
-  let unknown = 0
+  let unknownKm = 0
   const hazards: HazardSegment[] = []
 
-  for (let i = 0; i < samples.length; i += 1) {
-    if (samples[i].elevationM === null) unknown += 1
-    if (i === 0) continue
+  for (let i = 1; i < samples.length; i += 1) {
     const prev = samples[i - 1]
-    if (prev.elevationM === null || samples[i].elevationM === null) continue
-    const elevationM = samples[i].elevationM
-    const deltaH = elevationM! - prev.elevationM!
-    const horizontalM = (samples[i].distanceKm - prev.distanceKm) * 1000
+    const { elevationM, distanceKm: currentKm } = samples[i]
+    const segmentKm = currentKm - prev.distanceKm
+    if (prev.elevationM === null || elevationM === null) {
+      unknownKm += segmentKm
+      continue
+    }
+    const deltaH = elevationM - prev.elevationM
+    const horizontalM = segmentKm * 1000
     if (deltaH > 0) gain += deltaH
     else loss += Math.abs(deltaH)
     if (horizontalM > 0.001) {
@@ -157,7 +184,7 @@ export function buildTerrainProfile(
           fromKm: prev.distanceKm,
           toKm: samples[i].distanceKm,
           slopeDeg: slope,
-          elevationM: elevationM!,
+          elevationM,
         })
       }
     }
@@ -166,7 +193,7 @@ export function buildTerrainProfile(
   return {
     samples,
     totalKm: distanceKm,
-    unknownFraction: samples.length ? unknown / samples.length : 0,
+    unknownFraction: distanceKm > 0 ? unknownKm / distanceKm : 0,
     elevationGainM: Math.round(gain),
     elevationLossM: Math.round(loss),
     maxSlopeDeg: maxSlope,

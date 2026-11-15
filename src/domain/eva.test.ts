@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { RouteTerrain } from './dem'
 import type { Waypoint } from '@/types'
-import { computeEva } from './eva'
+import { computeEva, intermediateScienceStopMinutes } from './eva'
+import { computeReturnBudget } from './returnBudget'
 
 function terrain(overrides: Partial<RouteTerrain> = {}): RouteTerrain {
   return {
@@ -56,6 +57,32 @@ describe('EVA duration and verdict', () => {
     })
     expect(result.stopCount).toBe(2)
     expect(result.durationHours).toBeCloseTo(3 / 1.5 + (2 * 20) / 60, 6)
+  })
+
+  it('scores radiation from both walks and sampling, excluding unused reserve time', () => {
+    const profile = terrain({ totalKm: 1.5 })
+    const budget = computeReturnBudget({ terrain: profile, targetStayMinutes: 10, scienceStopMinutes: 40, reserveMinutes: 90 })
+    const result = computeEva({
+      terrain: profile,
+      routeWaypoints: [waypoint({ id: 'a' }), waypoint({ id: 'b', kind: 'pov' })],
+      thermalPercentile80: 348,
+      radiation: { scenarioId: 'background_gcr', doseRateMicroGyPerHour: 18, budget },
+    })
+    expect(result.breakdown.find(({ factor }) => factor === 'radiation exposure')?.value).toBe('51.0 µGy (18.0 µGy/h)')
+  })
+
+  it('counts intermediate science stops but budgets the destination from the target stay', () => {
+    const start = { lon: 77.38, lat: 18.45 }
+    const stop = { lon: 77.39, lat: 18.45 }
+    const profile = terrain({ samples: [
+      { ...start, distanceKm: 0, elevationM: -2500 },
+      { ...stop, distanceKm: 0.5, elevationM: -2500 },
+      { ...near, distanceKm: 1, elevationM: -2500 },
+    ] })
+    expect(intermediateScienceStopMinutes(profile, [
+      waypoint({ ...stop, id: 'intermediate' }),
+      waypoint({ ...near, id: 'destination' }),
+    ])).toBe(20)
   })
 
   it('downgrades to CAUTION when maximum slope passes 15 degrees', () => {
@@ -192,5 +219,97 @@ describe('EVA explanation and scores', () => {
     })
     expect(worst.safetyScore).toBeGreaterThanOrEqual(0)
     expect(worst.safetyScore).toBeLessThanOrEqual(100)
+  })
+
+  it('penalises sand and dune crossings without automatic NO-GO unless the dune no-go assumption is enabled', () => {
+    const sand = {
+      duneKm: 0.45,
+      sandSheetKm: 0.25,
+      uncertainKm: 0.1,
+      duneFraction: 0.18,
+      sandSheetFraction: 0.1,
+      uncertainFraction: 0.04,
+      totalSandFraction: 0.32,
+      hazardSegments: [
+        {
+          fromKm: 0.2,
+          toKm: 0.65,
+          kind: 'dune_field' as const,
+          from: { lon: 77.42, lat: 18.45 },
+          to: { lon: 77.41, lat: 18.45 },
+        },
+      ],
+    }
+    const defaultMode = computeEva({
+      terrain: terrain({ totalKm: 2.5, maxSlopeDeg: 8 }),
+      routeWaypoints: [waypoint()],
+      target: near,
+      thermalPercentile80: 348,
+      sand,
+      duneNoGoAssumption: false,
+    })
+    expect(defaultMode.verdict).toBe('CAUTION')
+    expect(defaultMode.safetyScore).toBeLessThan(100)
+    expect(defaultMode.breakdown.map((b) => b.factor)).toContain('sand & dune exposure')
+
+    const strictMode = computeEva({
+      terrain: terrain({ totalKm: 2.5, maxSlopeDeg: 8 }),
+      routeWaypoints: [waypoint()],
+      target: near,
+      thermalPercentile80: 348,
+      sand,
+      duneNoGoAssumption: true,
+    })
+    expect(strictMode.verdict).toBe('NO-GO')
+    expect(strictMode.verdictReason).toMatch(/dune/i)
+  })
+
+  it('uses continuous THEMIS data in the verdict and shows modeled radiation as an advisory', () => {
+    const sampledTerrain = terrain({
+      totalKm: 2.0,
+      maxSlopeDeg: 6,
+      samples: [
+        { lon: 77.32, lat: 18.42, distanceKm: 0, elevationM: -2550 },
+        { lon: 77.35, lat: 18.45, distanceKm: 1.0, elevationM: -2530 },
+        { lon: 77.38, lat: 18.48, distanceKm: 2.0, elevationM: -2510 },
+      ],
+    })
+    const hotRockyThermalGrid = {
+      bounds: [77.3, 18.4, 77.4, 18.5] as [number, number, number, number],
+      width: 4,
+      height: 4,
+      noData: -9999,
+      values: new Array(16).fill(395),
+    }
+
+    const thermalResult = computeEva({
+      terrain: sampledTerrain,
+      routeWaypoints: [waypoint()],
+      target: { lon: 77.38, lat: 18.48 },
+      thermalPercentile80: 348,
+      thermalGrid: hotRockyThermalGrid,
+    })
+    expect(thermalResult.verdict).toBe('CAUTION')
+    expect(thermalResult.safetyScore).toBeLessThan(90)
+
+    const inputs = {
+      terrain: sampledTerrain,
+      routeWaypoints: [waypoint()],
+      target: { lon: 77.38, lat: 18.48 },
+      thermalPercentile80: 348,
+    }
+    const withoutRadiation = computeEva(inputs)
+    const sepStormResult = computeEva({
+      ...inputs,
+      radiation: {
+        scenarioId: 'sep_sep2017',
+        doseRateMicroGyPerHour: 21.634,
+        totalExposureMicroGy: 102.5,
+        meanSkyVisibilityFraction: 0.96,
+      },
+    })
+    expect(sepStormResult.verdict).toBe(withoutRadiation.verdict)
+    expect(sepStormResult.safetyScore).toBe(withoutRadiation.safetyScore)
+    expect(sepStormResult.breakdown.map((b) => b.factor)).toContain('radiation exposure')
   })
 })

@@ -11,8 +11,8 @@ function ScoreRow({ label, value, color }: { label: string; value: number; color
   return (
     <div>
       <div className="flex items-baseline justify-between">
-        <span className="text-[10px] text-muted">{label}</span>
-        <span className="num font-mono text-[12px] text-ink">{value}</span>
+        <span className="text-[13px] text-muted">{label}</span>
+        <span className="num font-mono text-[14px] text-ink">{value}</span>
       </div>
       <div className="score-track mt-1.5">
         <span style={{ width: `${Math.min(100, Math.max(0, value))}%`, backgroundColor: color }} />
@@ -41,7 +41,7 @@ export function VerdictPlate({
           <span className="meta">awaiting traverse</span>
         </div>
         <p className="mt-3 text-[24px] font-medium leading-none tracking-[-0.03em] text-faint">—</p>
-        <p className="mt-2 text-[11px] leading-relaxed text-muted">
+        <p className="mt-2 text-[13px] leading-relaxed text-muted">
           Place at least two points to calculate distance, exposure and a verdict.
         </p>
       </section>
@@ -62,13 +62,13 @@ export function VerdictPlate({
       <p className="verdict-word mt-2" style={{ color: tone.color }}>
         {eva.verdict}
       </p>
-      <p className="mt-1 text-[10.5px] text-muted">{tone.note}</p>
-      <p className="mt-3 text-[11px] leading-relaxed text-ink/85">{eva.verdictReason}</p>
+      <p className="mt-1 text-[13px] text-muted">{tone.note}</p>
+      <p className="mt-3 text-[15px] leading-relaxed text-ink">{eva.verdictReason}</p>
       {ready && onShowSteepest && (eva.verdict === 'CAUTION' || eva.verdict === 'NO-GO') ? (
         <button
           type="button"
           onClick={onShowSteepest}
-          className="mt-2 text-[10px] text-signal hover:underline"
+          className="mt-2 text-[13px] text-signal hover:underline"
         >
           Show steepest segment on map
         </button>

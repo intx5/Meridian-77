@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-11-14T20:41:07Z",
+  "pipelineScript": "scripts/prepare_radiation.py",
+  "sources": [
+    {
+      "id": "msl_rad_pds",
+      "title": "MSL Mars Radiation Assessment Detector (RAD) Reduced Data Record V1.0",
+      "datasetId": "MSL-M-RAD-3-RDR-V1.0",
+      "profileUrl": "https://pds.nasa.gov/ds-view/pds/viewProfile.jsp?dsid=MSL-M-RAD-3-RDR-V1.0",
+      "archiveUrl": "https://pds-ppi.igpp.ucla.edu/data/MSL-M-RAD-3-RDR-V1.0/",
+      "variablesUsed": [
+        "DOSIMETRY_TOTAL_DOSE_B (microGray/Hour, 300 um Silicon Detector B)",
+        "DOSIMETRY_TOTAL_DOSE_E (microGray/Hour, Tissue-Equivalent Plastic Scintillator E)",
+        "OBS_DURATION (seconds)",
+        "QC (8-bit quality control string; required QC=='00000000')",
+        "START_OBS_UTC / START_OBS_MARS"
+      ],
+      "role": "Primary surface ionizing radiation reference (Gale Crater, Mars)."
+    },
+    {
+      "id": "maven_sep",
+      "title": "MAVEN Solar Energetic Particle (SEP) Instrument Package",
+      "url": "https://lasp.colorado.edu/maven/science/instrument-package/sep/",
+      "role": "Orbital energetic particle context for the September 2017 SEP event (Lee et al., 2018; Zeitlin et al., 2018). Not converted directly to surface dose without atmospheric transport."
+    },
+    {
+      "id": "mars2020_dem",
+      "title": "Mars 2020 Jezero Crater Digital Elevation Model (DEM)",
+      "url": "https://murray-lab.caltech.edu/Mars2020/index.html",
+      "localPath": "/data/jezero/dem.json",
+      "role": "16-azimuth local topographic horizon obstruction and sky-visibility solid-angle fraction (Terrain Shielding Potential \u2014 Experimental)."
+    },
+    {
+      "id": "scientific_literature",
+      "title": "Peer-Reviewed Mars Surface Dosimetry Benchmarks",
+      "citations": [
+        "Hassler, D. M., et al. (2014), Mars' Surface Radiation Environment Measured with the Mars Science Laboratory's Curiosity Rover, Science, 343(6169), 1244797.",
+        "Zeitlin, C., et al. (2018), Analysis of the Radiation Hazard Observed by RAD on the Surface of Mars During the September 2017 Solar Particle Event, Geophys. Res. Lett., 45, 5845\u20135851.",
+        "Guo, J., et al. (2021), Radiation environment for future human exploration on the surface of Mars, Astron. Astrophys. Rev., 29, 8."
+      ]
+    }
+  ],
+  "processingSteps": [
+    "1. Connected to NASA PDS PPI archive (MSL-M-RAD-3-RDR-V1.0) and parsed detached PDS3 .LBL byte pointers for observation headers and DOSIMETRY sections.",
+    "2. Filtered observations by quality control flag QC == '00000000', observation duration >= 120 s, and finite positive detector B & E dose rates.",
+    "3. Preserved physical units (microGray/hour for absorbed dose rate; microGray for integrated absorbed dose) without conflating Gray (Gy) and Sievert (Sv).",
+    "4. Computed 16-azimuth ray-marched horizon elevation angles and upper-hemisphere sky visibility fraction (Omega_sky / 2pi) across the 256x256 Jezero DEM grid.",
+    "5. Separated the regional Radiation Exposure reference layer from the experimental Terrain Shielding Potential layer."
+  ]
+}

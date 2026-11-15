@@ -65,4 +65,17 @@ describe('mission data contract', () => {
   it('reports waypoints outside the region', () => {
     expect(() => validateMissionData(manifest, dem, [{ ...waypoint, lon: 0 }])).toThrow(/outside the region/i)
   })
+
+  it('reports invalid raster dimensions even when their product matches the value count', () => {
+    expect(() => validateMissionData(manifest, { ...dem, width: -2, height: -2 }, [waypoint])).toThrow(/dem.json:.*dimensions/i)
+  })
+
+  it('rejects a thermal raster registered to a different region', () => {
+    const shifted: RasterGrid = { ...dem, bounds: [77.4, 18.4, 77.6, 18.6] }
+    expect(() => validateMissionData(manifest, dem, [waypoint], shifted)).toThrow(/thermal.json:.*bounds/i)
+  })
+
+  it('rejects waypoints without a finite coordinate', () => {
+    expect(() => validateMissionData(manifest, dem, [{ ...waypoint, lon: NaN }])).toThrow(/outside the region/i)
+  })
 })

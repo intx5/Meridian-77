@@ -1,0 +1,62 @@
+{
+  "limitations": "Declared EQC coordinates and image correlation are checked. This is not an independent control-network or vertical-datum certification.",
+  "localDem": {
+    "gridSpacingM": [
+      1.0,
+      1.0
+    ],
+    "bounds": [
+      4577343.614954024,
+      1088990.024117969,
+      4591684.614954024,
+      1106210.024117969
+    ],
+    "stations": [
+      {
+        "id": "wp-01",
+        "publishedSampleM": -2567.1,
+        "sourceNearestM": -2567.0657,
+        "differenceM": 0.0343
+      },
+      {
+        "id": "wp-02",
+        "publishedSampleM": -2498.7,
+        "sourceNearestM": -2498.3374,
+        "differenceM": 0.3626
+      },
+      {
+        "id": "wp-04",
+        "publishedSampleM": -2410.9,
+        "sourceNearestM": -2411.0068,
+        "differenceM": -0.1068
+      },
+      {
+        "id": "wp-05",
+        "publishedSampleM": -2386.1,
+        "sourceNearestM": -2385.5664,
+        "differenceM": 0.5336
+      }
+    ]
+  },
+  "opticalConsistency": {
+    "source": "C:\\Users\\Administrator\\Desktop\\Carto Mars\\PSP_003798_1985_Edited_affine_25cm_Eqc_latTs0_lon0_offNadir.tif",
+    "nativeGridM": [
+      0.25,
+      0.25
+    ],
+    "comparisonGridProjectedM": 20,
+    "zeroOffset": {
+      "eastShiftProjectedM": 0,
+      "southShiftProjectedM": 0,
+      "correlation": 0.992686,
+      "pixels": 143465
+    },
+    "bestOffset": {
+      "eastShiftProjectedM": 0,
+      "southShiftProjectedM": 0,
+      "correlation": 0.992686,
+      "pixels": 143465
+    },
+    "scope": "Only overlap with this local HiRISE image; does not certify CTX-filled areas or sub-grid registration."
+  }
+}

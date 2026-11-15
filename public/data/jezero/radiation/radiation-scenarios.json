@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "defaultScenarioId": "background_gcr",
+  "scenarios": [
+    {
+      "id": "background_gcr",
+      "label": "Background Radiation Scenario (GCR Dominated)",
+      "shortLabel": "Background GCR",
+      "dataStatus": "MEASURED_GALE_REFERENCE_APPLIED_TO_JEZERO",
+      "radiationSource": "Galactic Cosmic Rays (GCR: ~85\u201390% protons, ~10\u201314% alpha particles, ~1% HZE ions + secondary neutrons/gammas)",
+      "referenceOrigin": "NASA PDS MSL-M-RAD-3-RDR-V1.0 \u00b7 Curiosity RAD at Gale Crater (Sols 13\u20134550 & pre-event Sols 1809\u20131811)",
+      "referenceDateRange": "2012-08-19 to 2025-05-30 (Quiet-Sun Reference Baseline)",
+      "absorbedDoseRateMicroGyPerHour": 10.569,
+      "siliconAbsorbedDoseRateMicroGyPerHour": 9.991,
+      "gcrComponentMicroGyPerHour": 10.569,
+      "sepComponentMicroGyPerHour": 0.0,
+      "uncertaintyPercent": 22,
+      "publishedMeanQualityFactorQ": 3.05,
+      "informationalDoseEquivalentRateMicroSvPerHour": 32.24,
+      "sixHourEvaReferenceDoseMicroGy": 63.41,
+      "sixHourEvaUncertaintyRangeMicroGy": [
+        49.46,
+        77.37
+      ],
+      "shelterAdvisory": "Nominal galactic cosmic ray background. High-energy GCR ions penetrate thin EVA suits and shallow regolith overhangs; cumulative EVA exposure is governed primarily by total mission duration.",
+      "limitations": [
+        "Measured by Curiosity RAD in Gale Crater (~-4.5 km MOLA), not in-situ at Jezero Crater (~-2.5 km MOLA).",
+        "Jezero's ~2 km higher elevation reduces overlying CO2 mass column by ~15-18%, which can increase surface GCR dose rate within the +/-22% uncertainty band.",
+        "Absorbed dose (uGy) is a physical energy deposition quantity and must not be equated 1:1 with biological dose equivalent (uSv)."
+      ]
+    },
+    {
+      "id": "sep_sep2017",
+      "label": "Historical Solar Particle Event Scenario (Sep 2017 GLE 72)",
+      "shortLabel": "Sep 2017 SEP Event",
+      "dataStatus": "HISTORICAL_SEP_EVENT_SCENARIO",
+      "radiationSource": "GCR Background + Solar Energetic Particles (SEP protons >100 MeV penetrating Mars CO2 atmosphere during GLE 72)",
+      "referenceOrigin": "NASA PDS MSL-M-RAD-3-RDR-V1.0 (Sols 1811\u20131815) & MAVEN SEP Orbital Context (Zeitlin et al., 2018)",
+      "referenceDateRange": "2017-09-10 to 2017-09-13 (MSL Sols 1812\u20131814 Peak Window)",
+      "absorbedDoseRateMicroGyPerHour": 21.634,
+      "siliconAbsorbedDoseRateMicroGyPerHour": 22.09,
+      "peakAbsorbedDoseRateMicroGyPerHour": 25.892,
+      "gcrComponentMicroGyPerHour": 10.569,
+      "sepComponentMicroGyPerHour": 11.065,
+      "uncertaintyPercent": 28,
+      "publishedMeanQualityFactorQ": 2.15,
+      "informationalDoseEquivalentRateMicroSvPerHour": 48.28,
+      "sixHourEvaReferenceDoseMicroGy": 129.8,
+      "sixHourEvaUncertaintyRangeMicroGy": [
+        93.46,
+        166.15
+      ],
+      "shelterAdvisory": "Historical SEP surge scenario (modeled on the Sept 10\u201313, 2017 GLE 72 event where surface dose rate rose ~2.3x above GCR background to 25.89 uGy/h). Pre-mission planning advisory: minimize exposed target stay duration, keep return margin positive, and note high-obstruction scarp alcoves along the traverse.",
+      "limitations": [
+        "Historical reference event (September 2017 GLE 72); this system does NOT predict the timing or intensity of future solar particle events.",
+        "More extreme historical SPEs (e.g., Carrington 1859, August 1972, October 1989) with harder proton spectra could produce substantially higher surface dose rates than Sept 2017.",
+        "MAVEN SEP measures orbital particle fluxes above the atmosphere; surface dose rates here come from MSL-RAD surface measurements underneath ~20-23 g/cm\u00b2 of CO2."
+      ]
+    }
+  ]
+}

@@ -71,6 +71,23 @@
       "percentile80": 347.1
     },
     {
+      "id": "temperature",
+      "label": "Surface Temperature",
+      "imageUrl": "/data/jezero/temperature.webp",
+      "sourceUrl": "https://pds-atmospheres.nmsu.edu/data_and_services/atmospheres_data/PERSEVERANCE/meda.html",
+      "resolution": "19.5 m grid (THEMIS TI + DEM insolation + MEDA TIRS ref)",
+      "units": "°C (midday EVA ground temp)",
+      "legend": [
+        { "label": "< -28°C (bedrock / shaded scarp)", "color": "#1e3a8a" },
+        { "label": "-28°C to -22°C (crater floor)", "color": "#06b6d4" },
+        { "label": "-22°C to -16°C (warm fan / regolith)", "color": "#eab308" },
+        { "label": "> -16°C (low-TI dark sand / sun slope)", "color": "#ef4444" }
+      ],
+      "note": "Midday EVA ground skin temperature (-40°C to -8.5°C, median -21.9°C) modeled from THEMIS thermal inertia, Mars 2020 DEM solar incidence, HiRISE albedo, and Perseverance MEDA TIRS ground temperature calibration.",
+      "coveragePercent": 92.6,
+      "percentile80": -17.0
+    },
+    {
       "id": "mineralogy",
       "label": "Mineralogy · CRISM",
       "imageUrl": "/data/jezero/mineralogy.webp",
@@ -84,6 +101,48 @@
       "note": "CRISM 2.30 µm absorption depth: a possible phyllosilicate indicator, not a confirmed mineral abundance. Pixels below 0.010 are transparent.",
       "thresholdPositive": 0.01,
       "coveragePercent": 100
+    },
+    {
+      "id": "sand",
+      "label": "Sand & Dune Detection",
+      "imageUrl": "/data/jezero/sand.webp",
+      "sourceUrl": "https://www.uahirise.org/PSP_003798_1985",
+      "resolution": "0.25 m/px HiRISE + 39 m hybrid grid",
+      "units": "multi-sensor aeolian classification",
+      "legend": [
+        { "label": "Aeolian dune & TAR field", "color": "#f4a261" },
+        { "label": "Sand sheet & ripple deposit", "color": "#e9c46a" },
+        { "label": "Uncertain candidate", "color": "#a78bfa" }
+      ],
+      "note": "Hybrid detection combining HiRISE 25 cm ripple crest coherence, Mars 2020 DEM slope mask, THEMIS thermal inertia and USGS SIM 3464 Aeb calibration. Click polygons on the 2D map for provenance and risk limits.",
+      "coveragePercent": 17.6
+    },
+    {
+      "id": "radiation",
+      "label": "Radiation Exposure",
+      "imageUrl": "/data/jezero/radiation.webp",
+      "sourceUrl": "https://pds.nasa.gov/ds-view/pds/viewProfile.jsp?dsid=MSL-M-RAD-3-RDR-V1.0",
+      "resolution": "Regional reference · 39 m DEM column grid",
+      "units": "µGy/h (Gale RAD reference -> Jezero model)",
+      "legend": [
+        { "label": "Low vs reference", "color": "#3b82f6" },
+        { "label": "Moderate vs reference", "color": "#eab308" },
+        { "label": "Elevated (SEP / thin col.)", "color": "#f97316" },
+        { "label": "Peak SEP scenario", "color": "#ef4444" }
+      ],
+      "note": "Regional environmental exposure reference derived from NASA PDS MSL-M-RAD-3-RDR-V1.0 (Gale Crater) and Mars 2020 DEM coverage. Colors represent relative scenario/model reference bands, not NASA astronaut safety limits. Within Jezero's 500 m relief, vertical atmospheric column variation (<4.5%) is smaller than model uncertainty (±22%).",
+      "coveragePercent": 92.2,
+      "overlay": {
+        "id": "shielding",
+        "label": "Terrain Shielding Potential — Experimental",
+        "imageUrl": "/data/jezero/shielding.webp",
+        "defaultOpacity": 0,
+        "legend": [
+          { "label": "Open sky (>0.96 SVF)", "color": "#475569" },
+          { "label": "Moderate horizon (0.89–0.96 SVF)", "color": "#eab308" },
+          { "label": "Scarp alcove (<0.89 SVF)", "color": "#38bdf8" }
+        ]
+      }
     }
   ],
   "elevation": {

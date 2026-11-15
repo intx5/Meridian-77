@@ -1,9 +1,10 @@
 import { ReturnByCard } from '@/components/ReturnByCard'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
-import { EVA_ASSUMPTIONS } from '@/config/eva'
+import { EVA_ASSUMPTIONS, MIN_TRAVERSE_KM } from '@/config/eva'
 import { sampleElevation, type RouteTerrain } from '@/domain/dem'
 import { formatCoord, formatDuration, formatKm } from '@/domain/geo'
+import type { EvaRadiationAssessment } from '@/domain/radiation'
 import type {
   EvaResult,
   LayersManifest,
@@ -26,6 +27,7 @@ interface MissionBriefProps {
   targetWaypoint: Waypoint | null
   routeLabel: string
   cards: Waypoint[]
+  radiation?: EvaRadiationAssessment
 }
 
 function Rule({ label, value }: { label: string; value: string }) {
@@ -52,10 +54,13 @@ export function MissionBrief({
   targetWaypoint,
   routeLabel,
   cards,
+  radiation,
 }: MissionBriefProps) {
   const briefOpen = useMissionStore((state) => state.briefOpen)
   const setBriefOpen = useMissionStore((state) => state.setBriefOpen)
   const routeCards = cards.filter((card) => route.some((point) => point.waypointId === card.id))
+  const hasMeasuredRoute = terrain.totalKm >= MIN_TRAVERSE_KM
+  const hasReturnPlan = hasMeasuredRoute && !budget.dataInsufficient && budget.targetReachable
   const generated = new Date().toISOString().slice(0, 10)
   const verdictColor =
     eva.verdict === 'GO'
@@ -98,7 +103,7 @@ export function MissionBrief({
               targetWaypoint={targetWaypoint ?? undefined}
               budget={budget}
               verdict={eva.verdict}
-              ready={route.length >= 2}
+              ready={hasMeasuredRoute}
               onOpenBrief={() => undefined}
               showPrintButton={false}
             />
@@ -135,11 +140,12 @@ export function MissionBrief({
               <dl>
                 <Rule label="Distance" value={formatKm(eva.distanceKm)} />
                 <Rule label="Outbound time" value={formatDuration(budget.outboundHours)} />
+                <Rule label="Intermediate sampling" value={`${budget.scienceStopMinutes} min`} />
                 <Rule label="Return time" value={formatDuration(budget.returnHours)} />
                 <Rule label="Target stay" value={`${budget.targetStayMinutes} min`} />
-                <Rule label="Max target stay" value={`${budget.maxTargetStayMinutes} min`} />
-                <Rule label="Latest departure" value={budget.latestDeparture} />
-                <Rule label="Latest return" value={budget.latestReturn} />
+                <Rule label="Max target stay" value={hasReturnPlan ? `${budget.maxTargetStayMinutes} min` : '—'} />
+                <Rule label="Latest departure" value={hasReturnPlan ? budget.latestDeparture : '—'} />
+                <Rule label="Latest return" value={hasReturnPlan ? budget.latestReturn : '—'} />
                 <Rule label="Total mission" value={formatDuration(budget.totalHours)} />
                 <Rule label="Return margin" value={formatDuration(budget.marginHours)} />
                 <Rule label="Ascent / descent" value={`+${terrain.elevationGainM} / −${terrain.elevationLossM} m`} />
@@ -168,6 +174,45 @@ export function MissionBrief({
               </ul>
             </section>
           </div>
+
+          {radiation ? (
+            <section className="mt-6">
+              <SectionTitle>Environmental radiation exposure estimate</SectionTitle>
+              <dl className="grid gap-x-10 sm:grid-cols-2">
+                <Rule label="Scenario" value={radiation.scenarioLabel} />
+                <Rule label="Measurement / model status" value={radiation.measurementVsModelLabel} />
+                <Rule
+                  label="Reference absorbed dose rate"
+                  value={`${radiation.referenceDoseRateMicroGyPerHour.toFixed(2)} µGy/h`}
+                />
+                <Rule
+                  label="Total modeled EVA exposure"
+                  value={
+                    radiation.status === 'OK'
+                      ? `${radiation.totalModeledExposureMicroGy.toFixed(2)} µGy (±${radiation.uncertaintyPercent}%)`
+                      : 'Insufficient route data'
+                  }
+                />
+                <Rule
+                  label="Outbound + stops exposure"
+                  value={
+                    radiation.status === 'OK'
+                      ? `${radiation.estimatedRouteExposureMicroGy.toFixed(2)} µGy`
+                      : '—'
+                  }
+                />
+                <Rule
+                  label="Return walk exposure"
+                  value={radiation.status === 'OK' ? `${radiation.returnExposureMicroGy.toFixed(2)} µGy` : '—'}
+                />
+              </dl>
+              <p className="mt-2 text-[9.5px] leading-relaxed text-[#5d5549]">
+                Reference origin: {radiation.referenceOrigin} ({radiation.referenceDateRange}). Values represent an
+                unshielded surface environmental estimate transferred from Gale Crater, not an in-situ Jezero
+                measurement or biological organ dose.
+              </p>
+            </section>
+          ) : null}
 
           <section className="mt-6">
             <SectionTitle>Route points</SectionTitle>

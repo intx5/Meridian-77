@@ -6,6 +6,7 @@ import {
   MapContainer,
   Marker,
   Pane,
+  Polygon,
   Polyline,
   Tooltip,
   ZoomControl,
@@ -15,16 +16,51 @@ import {
 import { boundsCenter, formatCoord, MARS_DEGREE_M } from '@/domain/geo'
 import { sampleElevation, type RouteTerrain } from '@/domain/dem'
 import { EVA_CONFIG } from '@/domain/eva'
+import { sampleSandClass } from '@/domain/sand'
+import { sampleRouteDirections } from '@/domain/routeDirections'
 import { MAP_MAX_ZOOM, MAP_MIN_ZOOM } from '@/config/region'
 import { PRESET_ROUTES } from '@/config/routes'
-import type { Bounds, LayersManifest, RasterGrid, Waypoint } from '@/types'
+import type {
+  Bounds,
+  LayersManifest,
+  LonLat,
+  RadiationScenarioId,
+  RasterGrid,
+  SandFeatureCollection,
+  SandGrid,
+  SandKind,
+  Waypoint,
+} from '@/types'
 import { useMissionStore } from '@/store/useMissionStore'
+
+export interface CandidateMapRoute {
+  id: 'route_a' | 'route_b' | 'route_c'
+  label: string
+  color: string
+  dashArray?: string
+  waypoints: LonLat[]
+  canApply: boolean
+}
 
 interface Map2DProps {
   manifest: LayersManifest
   dem: RasterGrid
+  sand?: SandGrid
+  thermal?: RasterGrid
+  temperature?: RasterGrid
   waypoints: Waypoint[]
   terrain: RouteTerrain
+  sandDetections?: SandFeatureCollection
+  candidateRoutes?: CandidateMapRoute[]
+  activeCandidateId?: 'route_a' | 'route_b' | 'route_c' | null
+  showRouteDirections?: boolean
+  onApplyCandidateRoute?: (id: 'route_a' | 'route_b' | 'route_c') => void
+}
+
+const SAND_STYLE: Record<SandKind, { color: string; fillColor: string; dashArray?: string }> = {
+  dune_field: { color: '#f4a261', fillColor: '#f4a261' },
+  sand_sheet: { color: '#e9c46a', fillColor: '#e9c46a' },
+  uncertain_aeolian: { color: '#a78bfa', fillColor: '#a78bfa', dashArray: '4 4' },
 }
 
 type Positions = LatLngExpression[][]
@@ -56,18 +92,21 @@ function Graticule({ bounds }: { bounds: Bounds }) {
   )
 }
 
-function MapEvents({ dem }: { dem: RasterGrid }) {
+function MapEvents({ dem, temperature }: { dem: RasterGrid; temperature?: RasterGrid }) {
   const addPoint = useMissionStore((state) => state.addPoint)
   const setCoordinate = useMissionStore((state) => state.setCoordinate)
+  const [minLon, minLat, maxLon, maxLat] = dem.bounds
   useMapEvents({
     click(event) {
-      addPoint(event.latlng.lng, event.latlng.lat)
+      const { lng, lat } = event.latlng
+      if (lng >= minLon && lng <= maxLon && lat >= minLat && lat <= maxLat) addPoint(lng, lat)
     },
     mousemove(event) {
       setCoordinate({
         lon: event.latlng.lng,
         lat: event.latlng.lat,
         elevationM: sampleElevation(dem, event.latlng.lng, event.latlng.lat),
+        temperatureC: temperature ? sampleElevation(temperature, event.latlng.lng, event.latlng.lat) : null,
       })
     },
     mouseout() {
@@ -128,7 +167,43 @@ function MapTelemetry({ onChange }: { onChange: (zoom: number, lat: number) => v
   return null
 }
 
-function buildSeverityGroups(samples: RouteTerrain['samples']): Record<'safe' | 'caution' | 'nogo' | 'unknown', Positions> {
+function RouteDirectionMarkers({ route, zoom }: { route: readonly LonLat[]; zoom: number }) {
+  const map = useMap()
+  const arrows = useMemo(() => {
+    const projected = route.map(({ lat, lon }) => map.project([lat, lon], zoom))
+    return sampleRouteDirections([projected], (from, to) => from.distanceTo(to), 80, 18)
+      .map(({ from, to, fraction }) => {
+        const direction = to.subtract(from)
+        const position = map.unproject(from.add(direction.multiplyBy(fraction)), zoom)
+        const heading = Math.atan2(direction.y, direction.x)
+        return {
+          position,
+          icon: divIcon({
+            className: 'route-direction-marker',
+            iconSize: [16, 16],
+            iconAnchor: [8, 8],
+            html: `<span aria-hidden="true" class="route-direction-arrow" style="transform:rotate(${heading}rad)"></span>`,
+          }),
+        }
+      })
+  }, [map, route, zoom])
+  return (
+    <Pane name="route-directions" style={{ zIndex: 560, pointerEvents: 'none' }}>
+      {arrows.map(({ position, icon }, index) => (
+        <Marker key={index} position={position} icon={icon} interactive={false} keyboard={false} />
+      ))}
+    </Pane>
+  )
+}
+
+function buildSeverityGroups(
+  samples: RouteTerrain['samples'],
+  sand?: SandGrid,
+  thermal?: RasterGrid,
+  thermalPercentile80 = 348,
+  duneNoGoAssumption = false,
+  radiationScenarioId: RadiationScenarioId = 'background_gcr',
+): Record<'safe' | 'caution' | 'nogo' | 'unknown', Positions> {
   const groups: Record<'safe' | 'caution' | 'nogo' | 'unknown', Positions> = {
     safe: [],
     caution: [],
@@ -146,7 +221,26 @@ function buildSeverityGroups(samples: RouteTerrain['samples']): Record<'safe' | 
         horizontalM > 0.01
           ? (Math.atan(Math.abs(next.elevationM - prev.elevationM) / horizontalM) * 180) / Math.PI
           : 0
-      level = slope >= EVA_CONFIG.slopeNoGoDeg ? 'nogo' : slope >= EVA_CONFIG.slopeCautionDeg ? 'caution' : 'safe'
+      const midLon = (prev.lon + next.lon) / 2
+      const midLat = (prev.lat + next.lat) / 2
+      const sandCode = sand ? sampleSandClass(sand, midLon, midLat) : 0
+      const tiVal = thermal ? sampleElevation(thermal, midLon, midLat) : null
+      const highThermal = tiVal !== null && tiVal > thermalPercentile80
+      const sepHighElev = radiationScenarioId === 'sep_sep2017' && (prev.elevationM + next.elevationM) / 2 > -2450
+
+      if (slope >= EVA_CONFIG.slopeNoGoDeg || (duneNoGoAssumption && sandCode === 1)) {
+        level = 'nogo'
+      } else if (
+        slope >= EVA_CONFIG.slopeCautionDeg ||
+        sandCode === 1 ||
+        sandCode === 2 ||
+        highThermal ||
+        sepHighElev
+      ) {
+        level = 'caution'
+      } else {
+        level = 'safe'
+      }
     }
     const a: LatLngExpression = [prev.lat, prev.lon]
     const b: LatLngExpression = [next.lat, next.lon]
@@ -176,14 +270,35 @@ const stationIcon = (selected: boolean) =>
     iconAnchor: [13, 13],
   })
 
-export function Map2D({ manifest, dem, waypoints, terrain }: Map2DProps) {
+export function Map2D({
+  manifest,
+  dem,
+  sand,
+  thermal,
+  temperature,
+  waypoints,
+  terrain,
+  sandDetections,
+  candidateRoutes,
+  activeCandidateId,
+  showRouteDirections,
+  onApplyCandidateRoute,
+}: Map2DProps) {
   const layers = useMissionStore((state) => state.layers)
   const slopeOverlay = useMissionStore((state) => state.slopeOverlay)
   const slopeOpacity = useMissionStore((state) => state.slopeOpacity)
+  const shieldingOverlay = useMissionStore((state) => state.shieldingOverlay)
+  const shieldingOpacity = useMissionStore((state) => state.shieldingOpacity)
+  const radiationScenarioId = useMissionStore((state) => state.radiationScenarioId)
+  const radiationComponent = useMissionStore((state) => state.radiationComponent)
+  const duneNoGoAssumption = useMissionStore((state) => state.duneNoGoAssumption)
+  const showCandidateOverlay = useMissionStore((state) => state.showCandidateOverlay)
   const route = useMissionStore((state) => state.route)
   const undo = useMissionStore((state) => state.undo)
   const clear = useMissionStore((state) => state.clear)
   const selectedWaypointId = useMissionStore((state) => state.selectedWaypointId)
+  const selectedSandFeatureId = useMissionStore((state) => state.selectedSandFeatureId)
+  const selectSandFeature = useMissionStore((state) => state.selectSandFeature)
   const presetRouteId = useMissionStore((state) => state.presetRouteId)
   const highlightSegment = useMissionStore((state) => state.highlightSegment)
   const selectWaypoint = useMissionStore((state) => state.selectWaypoint)
@@ -201,7 +316,19 @@ export function Map2D({ manifest, dem, waypoints, terrain }: Map2DProps) {
     ],
     [bounds],
   )
-  const groups = useMemo(() => buildSeverityGroups(terrain.samples), [terrain.samples])
+  const thermalPercentile80 = manifest.layers.find((l) => l.id === 'thermal')?.percentile80 ?? 348
+  const groups = useMemo(
+    () =>
+      buildSeverityGroups(
+        terrain.samples,
+        sand,
+        thermal,
+        thermalPercentile80,
+        duneNoGoAssumption,
+        radiationScenarioId,
+      ),
+    [terrain.samples, sand, thermal, thermalPercentile80, duneNoGoAssumption, radiationScenarioId],
+  )
   const centerPoint = useMemo(() => boundsCenter(bounds), [bounds])
   const layerById = useMemo(
     () => Object.fromEntries(manifest.layers.map((layer) => [layer.id, layer])),
@@ -226,8 +353,8 @@ export function Map2D({ manifest, dem, waypoints, terrain }: Map2DProps) {
       {mapError ? (
         <div className="grid h-full place-items-center p-6 text-center">
           <div className="max-w-sm border-l-2 border-danger pl-4 text-left">
-            <p className="text-[12px] text-ink">Map imagery failed to load</p>
-            <p className="mt-1 text-[11px] leading-relaxed text-muted">
+            <p className="text-[14px] text-ink">Map imagery failed to load</p>
+            <p className="mt-1 text-[13px] leading-relaxed text-muted">
               Confirm the local files in public/data/jezero are present, then reload.
             </p>
           </div>
@@ -246,26 +373,77 @@ export function Map2D({ manifest, dem, waypoints, terrain }: Map2DProps) {
           className="h-full w-full"
           aria-label="Jezero delta terrain map"
         >
-          {(['optical', 'geology', 'topography', 'thermal', 'mineralogy'] as const).map((id, index) => {
-            const layer = layerById[id]
-            const state = layers[id]
-            if (!layer || !state.visible) return null
-            return (
-              <ImageOverlay
-                key={id}
-                url={layer.imageUrl}
-                bounds={latLngBounds}
-                opacity={state.opacity}
-                zIndex={10 + index * 10}
-                className={
-                  id === 'thermal' && (layers.optical.visible || layers.topography.visible)
-                    ? 'thermal-overlay'
-                    : undefined
-                }
-                eventHandlers={{ error: () => setMapError(true) }}
-              />
-            )
-          })}
+          {(['optical', 'geology', 'topography', 'thermal', 'temperature', 'mineralogy', 'sand', 'radiation'] as const).map(
+            (id, index) => {
+              const layer = layerById[id]
+              const state = layers[id]
+              if (!layer || !state?.visible) return null
+              const overlayUrl =
+                id === 'radiation'
+                  ? radiationComponent === 'gcr_only'
+                    ? '/data/jezero/radiation-gcr.webp'
+                    : radiationComponent === 'sep_only'
+                      ? '/data/jezero/radiation-sep.webp'
+                      : radiationScenarioId === 'sep_sep2017'
+                        ? '/data/jezero/radiation-sep-total.webp'
+                        : layer.imageUrl
+                  : layer.imageUrl
+              const overlayKey =
+                id === 'radiation' ? `radiation-${radiationScenarioId}-${radiationComponent}` : id
+              return (
+                <ImageOverlay
+                  key={overlayKey}
+                  url={overlayUrl}
+                  bounds={latLngBounds}
+                  opacity={id === 'sand' ? state.opacity * 0.45 : state.opacity}
+                  zIndex={10 + index * 10}
+                  className={
+                    (id === 'thermal' || id === 'temperature') && (layers.optical.visible || layers.topography.visible)
+                      ? 'thermal-overlay'
+                      : undefined
+                  }
+                  eventHandlers={{ error: () => setMapError(true) }}
+                />
+              )
+            },
+          )}
+
+          {layers.sand?.visible && sandDetections?.features.length ? (
+            <Pane name="sand-polygons" style={{ zIndex: 420 }}>
+              {sandDetections.features.map((feature) => {
+                const style = SAND_STYLE[feature.properties.kind]
+                const selected = feature.properties.id === selectedSandFeatureId
+                const positions = feature.geometry.coordinates.map((ring) =>
+                  ring.map((pt) => [pt[1], pt[0]] as [number, number]),
+                )
+                return (
+                  <Polygon
+                    key={feature.properties.id}
+                    positions={positions}
+                    pathOptions={{
+                      color: style.color,
+                      fillColor: style.fillColor,
+                      weight: selected ? 2.5 : 1.25,
+                      opacity: Math.min(1, layers.sand.opacity * 0.95),
+                      fillOpacity: Math.min(0.85, layers.sand.opacity * (selected ? 0.52 : 0.34)),
+                      dashArray: style.dashArray,
+                    }}
+                    eventHandlers={{
+                      click: (event) => {
+                        DomEvent.stopPropagation(event)
+                        selectSandFeature(feature.properties.id)
+                      },
+                    }}
+                  >
+                    <Tooltip sticky direction="top">
+                      {feature.properties.label} · {feature.properties.areaKm2.toFixed(2)} km² ·{' '}
+                      {Math.round(feature.properties.confidence * 100)}% conf.
+                    </Tooltip>
+                  </Polygon>
+                )
+              })}
+            </Pane>
+          ) : null}
 
           {layers.topography.visible && layerById.topography?.overlay && slopeOverlay ? (
             <ImageOverlay
@@ -273,6 +451,16 @@ export function Map2D({ manifest, dem, waypoints, terrain }: Map2DProps) {
               bounds={latLngBounds}
               opacity={slopeOpacity}
               zIndex={26}
+              eventHandlers={{ error: () => setMapError(true) }}
+            />
+          ) : null}
+
+          {layerById.radiation?.overlay && shieldingOverlay ? (
+            <ImageOverlay
+              url={layerById.radiation.overlay.imageUrl}
+              bounds={latLngBounds}
+              opacity={shieldingOpacity}
+              zIndex={76}
               eventHandlers={{ error: () => setMapError(true) }}
             />
           ) : null}
@@ -296,6 +484,40 @@ export function Map2D({ manifest, dem, waypoints, terrain }: Map2DProps) {
               />
             )
           })}
+
+          {showCandidateOverlay && candidateRoutes?.length ? (
+            <Pane name="ai-candidate-routes" style={{ zIndex: 430 }}>
+              {candidateRoutes.map((cand) => {
+                const isActive = activeCandidateId === cand.id
+                return (
+                  <Polyline
+                    key={`cand-${cand.id}`}
+                    interactive={cand.canApply}
+                    positions={cand.waypoints.map((pt) => [pt.lat, pt.lon] as [number, number])}
+                    pathOptions={{
+                      color: cand.color,
+                      weight: isActive ? 4.5 : cand.id === 'route_c' ? 3.5 : 3,
+                      opacity: isActive ? 0.98 : cand.id === 'route_c' ? 0.92 : 0.82,
+                      lineCap: 'round',
+                      dashArray: cand.dashArray,
+                    }}
+                    eventHandlers={{
+                      click: (event) => {
+                        DomEvent.stopPropagation(event)
+                        onApplyCandidateRoute?.(cand.id)
+                      },
+                    }}
+                  >
+                    {cand.canApply ? (
+                      <Tooltip sticky direction="top">
+                        {cand.label} · Click to set as main route
+                      </Tooltip>
+                    ) : null}
+                  </Polyline>
+                )
+              })}
+            </Pane>
+          ) : null}
 
           {highlightSegment ? (
             <Pane name="highlight" style={{ zIndex: 650 }}>
@@ -341,6 +563,8 @@ export function Map2D({ manifest, dem, waypoints, terrain }: Map2DProps) {
             />
           ) : null}
 
+          {showRouteDirections ? <RouteDirectionMarkers route={route} zoom={telemetry.zoom} /> : null}
+
           {waypoints.map((waypoint) => (
             <Marker
               key={waypoint.id}
@@ -383,7 +607,7 @@ export function Map2D({ manifest, dem, waypoints, terrain }: Map2DProps) {
             </Marker>
           ))}
 
-          <MapEvents dem={dem} />
+          <MapEvents dem={dem} temperature={temperature} />
           <MapFocus />
           <MapResize bounds={latLngBounds} />
           <MapTelemetry onChange={handleTelemetry} />
@@ -391,30 +615,47 @@ export function Map2D({ manifest, dem, waypoints, terrain }: Map2DProps) {
         </MapContainer>
       )}
 
-      <div className="absolute left-4 top-4 z-[500] flex items-center border border-line bg-bg/90 text-[10px]">
-        <button
-          type="button"
-          onClick={undo}
-          disabled={!route.length}
-          className="h-7 border-r border-line px-2.5 text-muted transition-colors hover:text-ink disabled:opacity-30"
-        >
-          Undo
-        </button>
-        <button
-          type="button"
-          onClick={clear}
-          disabled={!route.length}
-          className="h-7 border-r border-line px-2.5 text-muted transition-colors hover:text-ink disabled:opacity-30"
-        >
-          Clear
-        </button>
-        <button
-          type="button"
-          onClick={() => centerOn(centerPoint.lon, centerPoint.lat)}
-          className="h-7 px-2.5 text-muted transition-colors hover:text-ink"
-        >
-          Frame
-        </button>
+      <div className="absolute left-4 top-4 z-[500] flex flex-wrap items-center gap-1.5 text-[13px]">
+        <div className="flex items-center border border-line bg-bg/90">
+          <button
+            type="button"
+            onClick={undo}
+            disabled={!route.length}
+            className="h-9 border-r border-line px-2.5 text-muted transition-colors hover:text-ink disabled:opacity-30"
+          >
+            Undo
+          </button>
+          <button
+            type="button"
+            onClick={clear}
+            disabled={!route.length}
+            className="h-9 border-r border-line px-2.5 text-muted transition-colors hover:text-ink disabled:opacity-30"
+          >
+            Clear
+          </button>
+          <button
+            type="button"
+            onClick={() => centerOn(centerPoint.lon, centerPoint.lat)}
+            className="h-9 px-2.5 text-muted transition-colors hover:text-ink"
+          >
+            Frame
+          </button>
+        </div>
+
+        {onApplyCandidateRoute && candidateRoutes?.some((c) => c.id === 'route_c' && c.canApply) ? (
+          <button
+            type="button"
+            onClick={() => onApplyCandidateRoute('route_c')}
+            className={`flex h-9 items-center gap-1.5 border px-2.5 font-mono transition-colors ${
+              activeCandidateId === 'route_c'
+                ? 'border-[#3b82f6] bg-[#3b82f6]/20 text-ink'
+                : 'border-[#3b82f6]/70 bg-bg/95 text-[#60a5fa] hover:bg-[#3b82f6]/15 hover:text-ink'
+            }`}
+          >
+            <span className="h-2 w-2 shrink-0 rounded-full bg-[#3b82f6]" aria-hidden />
+            <span>{activeCandidateId === 'route_c' ? 'AI Blue Path Active' : 'Use AI Blue Path'}</span>
+          </button>
+        ) : null}
       </div>
 
       <span className="pointer-events-none absolute left-1.5 top-1.5 z-[500] h-2.5 w-2.5 border-l border-t border-muted/30" aria-hidden />
@@ -430,14 +671,17 @@ export function Map2D({ manifest, dem, waypoints, terrain }: Map2DProps) {
         <span className="meta">N</span>
       </div>
 
-      <div className="pointer-events-none absolute right-4 top-16 z-[500] text-right">
+      <div className="pointer-events-none absolute right-4 top-28 z-[500] max-w-[calc(100%-2rem)] border border-line bg-bg/95 px-3 py-2 text-right">
         {coordinate ? (
           <>
-            <p className="meta text-[10px] text-ink">
+            <p className="meta text-[13px] text-ink">
               {formatCoord(coordinate.lon, 'lon')} / {formatCoord(coordinate.lat, 'lat')}
             </p>
             <p className="meta mt-0.5">
               {coordinate.elevationM === null ? 'elevation unknown' : `${coordinate.elevationM.toFixed(0)} m`}
+              {coordinate.temperatureC !== null && coordinate.temperatureC !== undefined
+                ? ` · ${coordinate.temperatureC.toFixed(1)} °C`
+                : ''}
             </p>
           </>
         ) : (
@@ -447,17 +691,17 @@ export function Map2D({ manifest, dem, waypoints, terrain }: Map2DProps) {
 
       {!route.length ? (
         <div className="pointer-events-none absolute left-1/2 top-1/2 z-[500] w-[min(84%,320px)] -translate-x-1/2 -translate-y-1/2 border-l-2 border-accent pl-4">
-          <p className="text-[10px] text-accent">No traverse</p>
+          <p className="text-[13px] text-accent">No traverse</p>
           <p className="mt-1 text-[22px] font-medium leading-[1.1] tracking-[-0.02em] text-ink">
             Place the first point
           </p>
-          <p className="mt-2 max-w-[280px] text-[11px] leading-relaxed text-muted">
+          <p className="mt-2 max-w-[280px] text-[13px] leading-relaxed text-muted">
             Click the terrain to begin. Every segment is checked against elevation, slope and data gaps.
           </p>
         </div>
       ) : null}
 
-      <div className="pointer-events-none absolute bottom-4 left-4 z-[500]">
+      <div className="pointer-events-none absolute bottom-4 left-4 z-[500] border border-line bg-bg/95 px-3 py-2">
         <div className="flex items-end gap-2">
           <div
             className="relative h-2 border-x border-b border-muted/70"
@@ -466,10 +710,36 @@ export function Map2D({ manifest, dem, waypoints, terrain }: Map2DProps) {
           >
             <span className="absolute inset-x-0 top-0 h-px bg-muted/40" />
           </div>
-          <span className="meta text-[10px] text-ink">{scaleKm} km</span>
+          <span className="meta text-[13px] text-ink">{scaleKm} km</span>
         </div>
         <p className="meta mt-0.5">{metersPerPixel.toFixed(1)} m/px</p>
       </div>
+
+      {layers.radiation?.visible || shieldingOverlay ? (
+        <div
+          role="status"
+          aria-label="Radiation overlay status"
+          className="pointer-events-none absolute bottom-20 right-4 z-[500] max-w-[min(360px,calc(100%-2rem))] border border-line bg-bg/95 px-3 py-3 leading-relaxed text-left text-[13px]"
+        >
+          {layers.radiation?.visible ? (
+            <p className="text-ink">
+              <span className="text-caution">REGIONAL MODEL</span> ·{' '}
+              {radiationComponent === 'gcr_only'
+                ? 'GCR Baseline Only (~10.6 µGy/h · Yellow-Gold = Highest)'
+                : radiationComponent === 'sep_only'
+                  ? 'SEP Surge Only (+11.1 µGy/h · Pink-Rose = Highest)'
+                  : radiationScenarioId === 'sep_sep2017'
+                    ? 'Sep 2017 SEP Total (~21.6 µGy/h · Bright Yellow/Red = Highest)'
+                    : 'GCR Total (~10.6 µGy/h · Bright Amber/Yellow = Highest)'}
+            </p>
+          ) : null}
+          {shieldingOverlay ? (
+            <p className="text-[#38bdf8]">
+              Terrain Shielding Potential — Experimental (16-az DEM Sky-View; not % dose reduction)
+            </p>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   )
 }

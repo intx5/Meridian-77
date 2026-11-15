@@ -11,9 +11,9 @@ export function MissionSetup() {
     <section aria-labelledby="target-heading">
       <div className="flex items-baseline justify-between">
         <h2 id="target-heading" className="heading">
-          Objective
+          Default objective
         </h2>
-        <span className="meta">science target</span>
+        <span className="meta">without an endpoint</span>
       </div>
 
       <div role="radiogroup" aria-labelledby="target-heading" className="mt-2">

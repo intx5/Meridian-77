@@ -28,7 +28,7 @@ export function ElevationProfile({ terrain }: { terrain: RouteTerrain }) {
             Terrain profile
           </h2>
         </div>
-        <p className="mt-2 text-[10.5px] text-faint">A second point samples the elevation profile.</p>
+        <p className="mt-2 text-[13px] text-faint">A second point samples the elevation profile.</p>
       </section>
     )
   }
@@ -44,35 +44,35 @@ export function ElevationProfile({ terrain }: { terrain: RouteTerrain }) {
         </span>
       </div>
       <div
-        className="mt-2 h-[150px] w-full"
+        className="mt-2 h-[180px] w-full"
         role="img"
         aria-label="Route elevation in metres against distance in kilometres"
       >
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 6, right: 2, left: -26, bottom: 0 }}>
+          <AreaChart data={data} margin={{ top: 6, right: 2, left: -6, bottom: 0 }}>
             <CartesianGrid stroke="#1c2730" vertical={false} />
             <XAxis
               dataKey="km"
               type="number"
               domain={[0, 'dataMax']}
-              tick={{ fill: '#5e6c77', fontSize: 8, fontFamily: 'ui-monospace, monospace' }}
+              tick={{ fill: '#aab7c2', fontSize: 11, fontFamily: 'ui-monospace, monospace' }}
               tickLine={false}
               axisLine={{ stroke: '#1c2730' }}
               tickFormatter={(value: number) => value.toFixed(1)}
             />
             <YAxis
               domain={['auto', 'auto']}
-              tick={{ fill: '#5e6c77', fontSize: 8, fontFamily: 'ui-monospace, monospace' }}
+              tick={{ fill: '#aab7c2', fontSize: 11, fontFamily: 'ui-monospace, monospace' }}
               tickLine={false}
               axisLine={false}
-              width={44}
+              width={58}
             />
             <Tooltip
               contentStyle={{
                 background: '#06080a',
                 border: '1px solid #2e3d49',
                 borderRadius: 2,
-                fontSize: 10,
+                fontSize: 13,
                 fontFamily: 'ui-monospace, monospace',
               }}
               labelStyle={{ color: '#93a1ac' }}

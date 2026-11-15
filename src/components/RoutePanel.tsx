@@ -8,13 +8,13 @@ import { useMissionStore } from '@/store/useMissionStore'
 function Metric({ label, value, unit, tone }: { label: string; value: string; unit?: string; tone?: 'warn' | 'danger' }) {
   return (
     <div>
-      <div className="text-[10px] text-faint">{label}</div>
+      <div className="text-[13px] text-faint">{label}</div>
       <div
         className="num mt-0.5 font-medium leading-none text-ink"
         style={tone ? { color: tone === 'danger' ? 'var(--danger)' : 'var(--caution)' } : undefined}
       >
         <span className="text-[22px]">{value}</span>
-        {unit ? <span className="ml-1 font-sans text-[9px] font-normal tracking-normal text-faint">{unit}</span> : null}
+        {unit ? <span className="ml-1 font-sans text-[13px] font-normal tracking-normal text-faint">{unit}</span> : null}
       </div>
     </div>
   )
@@ -23,9 +23,9 @@ function Metric({ label, value, unit, tone }: { label: string; value: string; un
 function Mini({ label, value, tone }: { label: string; value: string; tone?: 'warn' | 'danger' }) {
   return (
     <div className="flex items-baseline justify-between border-t border-line py-1.5">
-      <span className="text-[10px] text-faint">{label}</span>
+      <span className="text-[13px] text-faint">{label}</span>
       <span
-        className="num font-mono text-[10.5px] text-muted"
+        className="num font-mono text-[13px] text-muted"
         style={tone ? { color: tone === 'danger' ? 'var(--danger)' : 'var(--caution)' } : undefined}
       >
         {value}
@@ -82,7 +82,7 @@ export function RoutePanel({
         <h2 id="route-heading" className="heading">
           Traverse
         </h2>
-        <div className="flex items-center gap-3 text-[10px]">
+        <div className="flex items-center gap-3 text-[13px]">
           <button type="button" onClick={undo} disabled={!route.length} className="text-muted hover:text-ink disabled:opacity-30">
             Undo
           </button>
@@ -93,7 +93,7 @@ export function RoutePanel({
       </div>
 
       {route.length < 2 ? (
-        <p className="mt-2 border-l border-line pl-3 text-[10.5px] leading-relaxed text-muted">
+        <p className="mt-2 border-l border-line pl-3 text-[13px] leading-relaxed text-muted">
           Two distinct points are required. Each segment is sampled every nine metres for elevation, slope and gaps.
         </p>
       ) : (
@@ -121,7 +121,7 @@ export function RoutePanel({
 
       <div className="mt-4 border-t border-line pt-3">
         <div className="flex items-baseline justify-between">
-          <span className="text-[10px] text-faint">Add coordinate</span>
+          <span className="text-[13px] text-faint">Add coordinate</span>
           <span className="meta">
             {formatCoord(bounds[0], 'lon')} – {formatCoord(bounds[2], 'lon')}
           </span>
@@ -154,14 +154,14 @@ export function RoutePanel({
           </Button>
         </form>
         {error ? (
-          <p role="alert" className="mt-1.5 text-[10px] text-danger">
+          <p role="alert" className="mt-1.5 text-[13px] text-danger">
             {error}
           </p>
         ) : null}
       </div>
 
       {terrain.unknownFraction > 0 ? (
-        <p className="mt-3 border-l-2 border-caution pl-3 text-[10px] leading-relaxed text-caution">
+        <p className="mt-3 border-l-2 border-caution pl-3 text-[13px] leading-relaxed text-caution">
           {Math.round(terrain.unknownFraction * 100)}% of the route has no DEM coverage. Unknown ground is never treated
           as flat.
         </p>

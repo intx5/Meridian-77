@@ -1,10 +1,15 @@
 node_modules/
 dist/
 .venv/
+.cache/
+.env
+.env.*
 *.log
 *.tsbuildinfo
 .browser-check/
 .playwright-mcp/
+test-results/
+playwright-report/
 .superpowers/
 .worktrees/
 *.tif

@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "count": 8,
+  "gutter": 2,
+  "bounds": [
+    77.29436321794068,
+    18.39402047680302,
+    77.46306926652184,
+    18.562726525384175
+  ],
+  "demSha256": "6e0727edabf8b7ddd27af1bf86190fce16b8a887ad89ad0115cbb262da2271dc",
+  "demWidth": 1024,
+  "demHeight": 1024,
+  "gridSpacingProjectedM": 9.765625,
+  "layers": {
+    "optical": {
+      "sourceSha256": "ff55b35ac932d862874bc991ceef6b269ef3eab73b448156e02b2e81bef25402",
+      "sourceSize": [
+        5000,
+        5000
+      ],
+      "tileSize": 625
+    },
+    "topography": {
+      "sourceSha256": "02486512f8c1bf51d5a5b37b789403b785fa4b9619dcb72e0f6721df76d0ca59",
+      "sourceSize": [
+        1024,
+        1024
+      ],
+      "tileSize": 128
+    },
+    "geology": {
+      "sourceSha256": "09032a30dea8e095869b134eb65162fad06f26ad7d84b47710adafe428894b89",
+      "sourceSize": [
+        2048,
+        2048
+      ],
+      "tileSize": 256
+    },
+    "thermal": {
+      "sourceSha256": "7d25a375f9db791f4328c2d665be26d10c89ec50d02d010cf3cdab5d7241e6c1",
+      "sourceSize": [
+        512,
+        512
+      ],
+      "tileSize": 64
+    },
+    "temperature": {
+      "sourceSha256": "4ceafb259bfe791e7674179fbe265b203aeeca3ca858a770824f576cac8129ca",
+      "sourceSize": [
+        512,
+        512
+      ],
+      "tileSize": 64
+    },
+    "mineralogy": {
+      "sourceSha256": "c281e5c55cde2ff8aac34ed4e83efd098a3c1f0c09f6552471ad5aaa7987cdcc",
+      "sourceSize": [
+        256,
+        256
+      ],
+      "tileSize": 32
+    },
+    "sand": {
+      "sourceSha256": "970def9b4e33a91380b5a606d078fa59a8ace05af026a2bab8a5fe5eb074ed27",
+      "sourceSize": [
+        512,
+        512
+      ],
+      "tileSize": 64
+    },
+    "radiation": {
+      "sourceSha256": "6b4da3077bfe4d7fca2910143c22c7c950be9e1bf780e99cc8e1a257f73e94c5",
+      "sourceSize": [
+        512,
+        512
+      ],
+      "tileSize": 64
+    },
+    "slope": {
+      "sourceSha256": "82c027b2b895737f3b4b0a46bf8fff9819af3b72ddc77e817ecc363963e7ea88",
+      "sourceSize": [
+        1024,
+        1024
+      ],
+      "tileSize": 128
+    },
+    "shielding": {
+      "sourceSha256": "2ab380b09b828b6588b67514a8107a03a5df87d1cb470d20088fd6c1868b417a",
+      "sourceSize": [
+        512,
+        512
+      ],
+      "tileSize": 64
+    },
+    "radiation-sep-total": {
+      "sourceSha256": "8d51eabfedb86d06416242b2faa58eb23e1f23ca82d17d282f1c626b84555661",
+      "sourceSize": [
+        512,
+        512
+      ],
+      "tileSize": 64
+    },
+    "radiation-gcr": {
+      "sourceSha256": "23b8e9e26b7228c23c517002f04b4e4de79fe3240e488d4a4445d2765ff81494",
+      "sourceSize": [
+        512,
+        512
+      ],
+      "tileSize": 64
+    },
+    "radiation-sep": {
+      "sourceSha256": "8a1830b165bf2c8c00703b5b9b3c6ed2b1e5b6417827af120cebd27c8fc88044",
+      "sourceSize": [
+        512,
+        512
+      ],
+      "tileSize": 64
+    },
+    "optical-low": {
+      "sourceSha256": "ff55b35ac932d862874bc991ceef6b269ef3eab73b448156e02b2e81bef25402",
+      "sourceSize": [
+        1280,
+        1280
+      ],
+      "tileSize": 160
+    }
+  },
+  "registration": "Same declared bounds and north-first pixel-centre convention as 2D. Absolute optical registration is not independently certified; original optical preparation is absent."
+}

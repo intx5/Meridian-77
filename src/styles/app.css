@@ -33,8 +33,8 @@
   --line: #1c2730;
   --line-2: #2e3d49;
   --text: #e9eff4;
-  --muted: #93a1ac;
-  --faint: #7a8994;
+  --muted: #b0bdc7;
+  --faint: #99a9b6;
   --accent: #ff6b3d;
   --signal: #57c7ff;
   --go: #8fe0ac;
@@ -42,8 +42,8 @@
   --danger: #ff8172;
   --paper: #efe9de;
   --paper-ink: #14181b;
-  --rail-left: 288px;
-  --rail-right: 344px;
+  --rail-left: 320px;
+  --rail-right: 380px;
 }
 
 * { box-sizing: border-box; border-color: var(--line); }
@@ -73,14 +73,14 @@ a { color: var(--signal); text-underline-offset: 2px; }
 
 /* Type roles */
 .label {
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.4;
   color: var(--faint);
   letter-spacing: 0.015em;
 }
 .meta {
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 12px;
   line-height: 1.5;
   color: var(--faint);
   font-variant-numeric: tabular-nums;
@@ -90,7 +90,7 @@ a { color: var(--signal); text-underline-offset: 2px; }
   letter-spacing: -0.025em;
 }
 .heading {
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.005em;
   color: var(--text);
@@ -108,7 +108,7 @@ a { color: var(--signal); text-underline-offset: 2px; }
   padding: 0 11px;
   border: 1px solid transparent;
   border-radius: 2px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   line-height: 1;
   transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
@@ -132,7 +132,7 @@ a { color: var(--signal); text-underline-offset: 2px; }
   background: transparent;
   color: var(--text);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
 }
 .input:focus { border-color: var(--signal); outline: none; }
@@ -166,17 +166,65 @@ a { color: var(--signal); text-underline-offset: 2px; }
   border-radius: 2px;
   box-shadow: none;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.01em;
   padding: 3px 6px;
 }
 .leaflet-tooltip-top:before { border-top-color: var(--line-2); }
 .leaflet-tooltip-right:before { border-right-color: var(--line-2); }
 
+.route-direction-arrow {
+  position: absolute;
+  inset: 0 auto auto 0;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  filter: drop-shadow(0 0 1px #050709) drop-shadow(0 0 2px #050709);
+}
+.route-direction-arrow::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  background: #fff5e8;
+  clip-path: polygon(17% 0, 45% 0, 95% 50%, 45% 100%, 17% 100%, 67% 50%);
+}
+.terrain-route-directions { position:absolute; inset:0; pointer-events:none; z-index:34; }
+.terrain-route-directions .route-direction-arrow { visibility:hidden; }
+
 /* Thermal inertia is a thematic wash, not an opaque picture. */
 .thermal-overlay {
   mix-blend-mode: multiply;
 }
+
+/* Terrain remains an alternative view of the same mission, not a second planner. */
+.terrain-view { height:100%; display:flex; flex-direction:column; min-height:0; }
+.terrain-view-switch { display:flex; flex-shrink:0; border-bottom:1px solid var(--line); background:var(--bg); padding:7px 12px; gap:4px; }
+.terrain-view-switch button { padding:5px 13px; color:var(--muted); font-size:13px; border:1px solid transparent; }
+.terrain-view-switch button[aria-pressed="true"] { color:var(--ink); border-color:var(--line-2); background:#ffffff08; }
+.terrain-viewport { flex:1; min-height:0; position:relative; }
+.terrain-3d { height:100%; position:relative; background:#11191e; overflow:hidden; }
+.terrain-toolbar { position:absolute; left:12px; right:12px; top:12px; display:flex; justify-content:space-between; gap:6px; flex-wrap:wrap; pointer-events:none; z-index:50; }
+.terrain-controls { display:flex; flex-wrap:wrap; max-width:100%; background:#10181ef0; border:1px solid var(--line-2); pointer-events:auto; }
+.terrain-controls button { padding:7px 9px; font-size:13px; color:var(--muted); border-right:1px solid var(--line); }
+.terrain-controls button:last-child { border-right:0; }
+.terrain-controls button:hover { color:var(--ink); }
+.terrain-controls button[aria-pressed="true"] { color:var(--accent); background:#ff6b3d0c; }
+.terrain-controls button:disabled { opacity:.35; }
+.terrain-edit { position:absolute; left:12px; top:84px; z-index:50; }
+.terrain-caption { position:absolute; bottom:13px; left:14px; right:14px; display:flex; flex-direction:column; gap:6px; padding:10px 12px; background:rgba(6,8,10,.92); border:1px solid var(--line-2); line-height:1.5; font-size:13px; color:#b6bfc5; pointer-events:none; text-shadow:0 1px 3px #000; z-index:45; }
+.terrain-caption strong { font-size:13px; color:#e4d4c0; letter-spacing:.06em; }
+.terrain-warning { color:#efc46b; }
+.terrain-readout { position:absolute; right:14px; top:125px; color:#d9e1e5; font:13px/1.6 monospace; background:rgba(6,8,10,.92); padding:8px 12px; border:1px solid var(--line-2); text-align:right; pointer-events:none; z-index:45; }
+.terrain-message { height:100%; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:12px; padding:24px; background:#11191e; color:var(--ink); text-align:center; font-size:12px; }
+.terrain-message button { padding:8px 16px; border:1px solid var(--line-2); color:var(--accent); }
+.terrain-station { width:max-content; max-width:160px; padding:2px 6px; background:#11191eda; border:1px solid #445864; color:#dceaf4; font-size:13px; text-shadow:0 1px 3px black; cursor:pointer; }
+.terrain-station.is-selected { color:#ffac7c; }
+.terrain-labels { position:absolute; inset:0; pointer-events:none; z-index:35; overflow:hidden; }
+.terrain-labels > button { position:absolute; left:0; top:0; pointer-events:auto; visibility:hidden; }
+.terrain-route-pin { border:1px solid #ffd5b9; background:#271c16; color:#ffb28c; width:23px; height:23px; border-radius:50%; font:10px monospace; cursor:pointer; }
+@media(max-width:600px) { .terrain-caption { font-size:12px; gap:2px; } .terrain-caption span:last-child { display:none; } .terrain-toolbar { gap:5px; } .terrain-controls button { padding:6px 7px; font-size:13px; } .terrain-edit { top:80px; } }
 
 .pin-hit {
   display: grid;
@@ -273,3 +321,5 @@ a { color: var(--signal); text-underline-offset: 2px; }
     box-shadow: none !important;
   }
 }
+
+.field-card .meta { color: #6b6153; }

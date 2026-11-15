@@ -8,9 +8,16 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test": "vitest run",
+    "pretest:browser": "npm run build",
+    "test:browser": "playwright test",
+    "prepare:sand": "python scripts/prepare_sand_detection.py",
+    "prepare:terrain": "python scripts/prepare_terrain.py",
+    "verify:terrain": "python scripts/prepare_terrain.py --verify",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "leaflet": "^1.9.4",
@@ -21,15 +28,23 @@
     "react-leaflet": "^5.0.0",
     "recharts": "^3.10.1",
     "tailwind-merge": "^3.7.0",
+    "three": "^0.187.0",
     "zustand": "^5.1.0"
+  },
+  "overrides": {
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.8"
+    }
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.65.1",
     "@tailwindcss/vite": "^4.3.5",
     "@types/leaflet": "^1.9.22",
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@types/three": "^0.187.0",
     "@vitejs/plugin-react": "^6.3.0",
     "eslint": "^10.15.0",
     "eslint-plugin-react-hooks": "^7.1.1",
